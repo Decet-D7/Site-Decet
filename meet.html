@@ -16,7 +16,6 @@
 <div class="room-info" hidden="" id="room-info">
 <span class="room-code"><small>Sala</small> <b id="room-code"></b></span>
 <button class="chip" id="copy-link" type="button">Copiar link</button>
-<label class="auto-admit" hidden="" id="auto-admit-wrap"><input id="auto-admit" type="checkbox"/> Admitir quem acertar a senha</label>
 <span class="room-count" id="room-count"></span>
 </div>
 </header>
@@ -27,7 +26,7 @@
 <p class="eyebrow">DECET / USO INTERNO</p>
 <h1 id="lobby-title">Voz, chat e tela.<br/><em>Só para o time.</em></h1>
 <p>Áudio, tela e mensagens vão direto entre os participantes (WebRTC, criptografado). Nada fica gravado: ao sair, o histórico some.</p>
-<ul class="lobby-points"><li>Quem cria a sala define a senha e aprova cada entrada.</li><li>Cole imagens no chat com <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li><li>Compartilhamento de tela no navegador do computador.</li></ul>
+<ul class="lobby-points"><li>Quem cria a sala define a senha. Quem tiver o link e a senha entra direto.</li><li>Cole imagens no chat com <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li><li>Compartilhamento de tela no navegador do computador.</li></ul>
 </div>
 <form class="lobby-card" data-mode="create" id="lobby-form" novalidate="">
 <div aria-label="O que você quer fazer?" class="mode-tabs" role="tablist">
@@ -37,8 +36,8 @@
 <label>Seu nome<input autocomplete="nickname" maxlength="40" name="name" placeholder="Como o time te chama" required=""/></label>
 <label class="join-only">Código ou link da sala<input autocapitalize="off" autocomplete="off" name="room" placeholder="xxxx-xxxx-xxxx" spellcheck="false"/></label>
 <label>Senha da sala<input autocomplete="off" minlength="6" name="password" placeholder="Mínimo de 6 caracteres" required="" type="password"/></label>
-<p class="lobby-hint create-only">Você será o anfitrião. A senha não fica salva em lugar nenhum: passe para o time por outro canal. Se o anfitrião sair, quem está na sala continua, mas ninguém novo entra.</p>
-<p class="lobby-hint join-only">Depois da senha, o anfitrião ainda precisa aprovar sua entrada.</p>
+<p class="lobby-hint create-only">Você será o anfitrião. A senha não fica salva em lugar nenhum: passe para o time por outro canal. Quem tiver o link e a senha entra direto. Se o anfitrião sair, quem está na sala continua, mas ninguém novo entra.</p>
+<p class="lobby-hint join-only">Cole o link ou o código recebido e digite a senha da sala.</p>
 <button class="button gold" id="lobby-submit" type="submit">Criar sala</button>
 <p aria-live="polite" class="lobby-status" id="lobby-status" role="status"></p>
 </form>
@@ -63,7 +62,6 @@
 <div class="composer-actions"><label class="chip attach">Imagem<input accept="image/png,image/jpeg,image/webp,image/gif" id="file-input" multiple="" type="file"/></label><span class="composer-hint">Enter envia · Shift+Enter quebra linha</span><button class="button gold send" type="submit">Enviar</button></div>
 </form>
 </aside>
-<div aria-live="assertive" class="requests" id="requests"></div>
 </section>
 </main>
 
