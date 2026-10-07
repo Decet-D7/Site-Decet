@@ -17,12 +17,15 @@ const SERVER_TIMEOUT = 15000;    // até conectar no servidor de sinalização
 const CONNECT_TIMEOUT = 20000;   // até abrir a conexão direta com o anfitrião
 const ANSWER_TIMEOUT = 15000;    // até o anfitrião responder à senha
 
-// Servidores para atravessar NAT. STUN resolve a maioria das redes domésticas.
-// Redes corporativas, VPN e alguns 4G exigem um TURN (retransmissão): crie uma conta gratuita
-// na Metered (Open Relay) e cole aqui a URL de credenciais, no formato
-// https://SEU-APP.metered.live/api/v1/turn/credentials?apiKey=SUA-CHAVE
-const STUN_SERVERS = [{urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302']}, {urls: 'stun:stun.cloudflare.com:3478'}];
-const TURN_CREDENTIALS_URL = '';
+// Servidores para atravessar NAT. STUN resolve a maioria das redes domésticas; o TURN da Metered
+// (workspace "decet", credencial "sala-dev") retransmite quando VPN, firewall ou rede corporativa
+// bloqueiam a conexão direta. A credencial fica pública no site: se vazar uso, gere outra no painel
+// da Metered (TURN Server → Credentials) e troque aqui.
+const TURN_AUTH = {username: '6e61c93e46321ea14f8811d8', credential: '01FGSSv5gyxtMDhN'};
+const ICE_SERVERS = [
+  {urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478']},
+  {urls: ['turn:global.relay.metered.ca:80', 'turn:global.relay.metered.ca:80?transport=tcp', 'turn:global.relay.metered.ca:443', 'turns:global.relay.metered.ca:443?transport=tcp'], ...TURN_AUTH},
+];
 const PENDING_TIMEOUT = 10000;
 const HISTORY_SIZE = 50;
 
@@ -142,17 +145,8 @@ function meterLoop() {
 }
 
 // ---------- Peer ----------
-async function iceServers() {
-  if (!TURN_CREDENTIALS_URL) return STUN_SERVERS;
-  try {
-    const response = await fetch(TURN_CREDENTIALS_URL, {signal: AbortSignal.timeout(5000)});
-    const turn = await response.json();
-    if (Array.isArray(turn)) return [...STUN_SERVERS, ...turn];
-  } catch (error) { console.warn('[sala] TURN indisponível', error); }
-  return STUN_SERVERS;
-}
-async function makePeer(id) {
-  const options = {debug: 0, config: {iceServers: await iceServers()}};
+function makePeer(id) {
+  const options = {debug: 0, config: {iceServers: ICE_SERVERS}};
   const peer = id ? new Peer(id, options) : new Peer(options);
   state.peer = peer;
   peer.on('error', onPeerError);
@@ -182,13 +176,13 @@ function onPeerError(err) {
   if (err.type !== 'peer-unavailable') console.warn('[sala]', err.type, err);
 }
 
-async function createRoom(password) {
+function createRoom(password) {
   state.isHost = true;
   state.password = password;
   state.room = newRoomCode();
   state.hostId = HOST_PREFIX + state.room;
   setLobbyStatus('Criando a sala…');
-  const peer = await makePeer(state.hostId);
+  const peer = makePeer(state.hostId);
   peer.on('open', id => {
     state.me.id = id;
     state.roster.set(id, state.me.name);
@@ -197,11 +191,11 @@ async function createRoom(password) {
   });
 }
 
-async function joinRoom(code, password) {
+function joinRoom(code, password) {
   state.room = code;
   state.hostId = HOST_PREFIX + code;
   setLobbyStatus('Conectando ao servidor…');
-  const peer = await makePeer();
+  const peer = makePeer();
   peer.on('open', id => {
     state.me.id = id;
     setLobbyStatus('Procurando a sala…');
@@ -209,7 +203,7 @@ async function joinRoom(code, password) {
     let settled = false, timer;
     const settle = () => { settled = true; clearTimeout(timer); };
     const failAfter = (ms, message) => { clearTimeout(timer); timer = setTimeout(() => { if (!settled) { settle(); lobbyFail(message); } }, ms); };
-    failAfter(CONNECT_TIMEOUT, 'A sala existe, mas não foi possível conectar com ela. A rede de alguém (VPN, firewall ou rede corporativa) pode estar bloqueando a conexão direta. Tente outra rede, como o 4G do celular.');
+    failAfter(CONNECT_TIMEOUT, 'A sala existe, mas não foi possível conectar com ela. A rede pode estar bloqueando chamadas (VPN ou firewall muito restritivo). Tente outra rede, como o 4G do celular.');
     conn.on('open', () => {
       conn.send({type: 'knock', name: state.me.name, password});
       setLobbyStatus('Conferindo a senha…');
