@@ -29,6 +29,18 @@ const ICE_SERVERS = [
 const PENDING_TIMEOUT = 10000;
 const HISTORY_SIZE = 50;
 
+// Pontos de extensão para os módulos da sala (lousa, gravação, transcrição).
+const hooks = {
+  data: {},        // tipo de mensagem -> (id, msg) recebida de um participante
+  welcome: [],     // () => campos extras que o anfitrião manda para quem entra
+  welcomed: [],    // (msg) quem entrou recebe o welcome
+  entered: [],     // () entrou na sala
+  audio: [],       // (id, stream) chegou o áudio de um participante
+  left: [],        // (id) participante saiu
+  muted: [],       // (muted) mudou o próprio microfone
+  leave: [],       // async () antes de sair da sala
+};
+
 const $ = selector => document.querySelector(selector);
 const lobby = $('#lobby'), lobbyForm = $('#lobby-form'), lobbyStatus = $('#lobby-status'), lobbySubmit = $('#lobby-submit');
 const room = $('#room'), stage = $('#stage'), screens = $('#screens'), tiles = $('#tiles');
@@ -225,6 +237,7 @@ function onWelcome(hostConn, msg) {
     if (item && typeof item.text === 'string' && typeof item.name === 'string') addChat({name: item.name.slice(0, 40), text: item.text.slice(0, 4000), ts: item.ts, history: true});
   });
   systemMessage('Você entrou na sala.');
+  hooks.welcomed.forEach(fn => fn(msg));
   attachMember(hostConn);
   callAudio(state.hostId);
   state.roster.forEach((name, id) => {
@@ -290,7 +303,7 @@ function deny(conn, reason) {
 function admit(conn, name) {
   state.roster.set(conn.peer, name);
   broadcast({type: 'roster', peers: rosterList()});
-  conn.send({type: 'welcome', peers: rosterList(), history: state.history.slice(-HISTORY_SIZE)});
+  conn.send(Object.assign({}, ...hooks.welcome.map(extra => extra()), {type: 'welcome', peers: rosterList(), history: state.history.slice(-HISTORY_SIZE)}));
   attachMember(conn);
   systemMessage(name + ' entrou.');
 }
@@ -337,6 +350,7 @@ function dropMember(id, knownName) {
   document.getElementById('audio-' + id)?.remove();
   removeScreen(id);
   stopMeter(id);
+  hooks.left.forEach(fn => fn(id));
   const name = knownName || state.roster.get(id) || 'Alguém';
   state.roster.delete(id);
   if (state.isHost) broadcast({type: 'roster', peers: rosterList()});
@@ -357,6 +371,7 @@ function onData(id, msg) {
     case 'state': member.muted = !!msg.muted; renderTiles(); break;
     case 'screen-stop': member.screenIn?.close(); member.screenIn = null; removeScreen(id); break;
     case 'roster': if (id === state.hostId && !state.isHost) applyRoster(msg.peers); break;
+    default: hooks.data[msg.type]?.(id, msg);
   }
 }
 function broadcast(msg) {
@@ -405,6 +420,7 @@ function playAudio(id, stream) {
   audio.srcObject = stream;
   audio.play().catch(() => systemMessage('O navegador bloqueou o áudio. Clique em qualquer lugar da página para ouvir.'));
   watchLevel(id, stream);
+  hooks.audio.forEach(fn => fn(id, stream));
 }
 document.addEventListener('click', () => {
   if (state.audioCtx?.state === 'suspended') state.audioCtx.resume();
@@ -449,6 +465,7 @@ function enterRoom() {
   watchLevel(state.me.id, state.localStream);
   updateControls();
   renderTiles();
+  hooks.entered.forEach(fn => fn());
   input.focus();
 }
 function updateControls() {
@@ -466,6 +483,7 @@ micBtn.addEventListener('click', () => {
   broadcast({type: 'state', muted: state.muted});
   updateControls();
   renderTiles();
+  hooks.muted.forEach(fn => fn(state.muted));
 });
 shareBtn.addEventListener('click', async () => {
   if (state.screenStream) return stopShare();
@@ -488,7 +506,9 @@ function stopShare() {
   removeScreen(state.me.id);
   updateControls();
 }
-leaveBtn.addEventListener('click', () => {
+leaveBtn.addEventListener('click', async () => {
+  leaveBtn.disabled = true;
+  for (const fn of hooks.leave) await fn();
   const wasHost = state.isHost;
   teardown();
   if (wasHost) history.replaceState(null, '', location.pathname);
