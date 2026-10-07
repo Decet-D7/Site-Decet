@@ -1,8 +1,9 @@
 'use strict';
 // Sala dev: voz, chat (com imagens coladas) e compartilhamento de tela via WebRTC (PeerJS).
-// Malha P2P: quem entra conecta em todos que já estão na sala. O anfitrião confere a senha
-// e distribui a lista de participantes (roster), que é a única fonte de nomes.
-// Quem tem o link e a senha entra direto.
+// Malha P2P: quem entra conecta em todos que já estão na sala. O anfitrião distribui a lista de
+// participantes (roster), que é a única fonte de nomes.
+// Acesso: só quem está logado no time. Cada lado registra um ticket (room_tickets) com o próprio peer;
+// o anfitrião confere quem entra e quem entra confere o anfitrião (verify_room_ticket), sem trocar senha.
 
 const HOST_PREFIX = 'decet-dev-';
 const ROOM_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
@@ -15,7 +16,7 @@ const COMPRESS_ABOVE = 1.5 * 1024 * 1024;
 const KNOCK_TIMEOUT = 15000;
 const SERVER_TIMEOUT = 15000;    // até conectar no servidor de sinalização
 const CONNECT_TIMEOUT = 20000;   // até abrir a conexão direta com o anfitrião
-const ANSWER_TIMEOUT = 15000;    // até o anfitrião responder à senha
+const ANSWER_TIMEOUT = 15000;    // até o anfitrião conferir o login de quem entra
 
 // Servidores para atravessar NAT. STUN resolve a maioria das redes domésticas; o TURN da Metered
 // (workspace "decet", credencial "sala-dev") retransmite quando VPN, firewall ou rede corporativa
@@ -42,14 +43,14 @@ const hooks = {
 };
 
 const $ = selector => document.querySelector(selector);
-const lobby = $('#lobby'), lobbyForm = $('#lobby-form'), lobbyStatus = $('#lobby-status'), lobbySubmit = $('#lobby-submit');
+const lobby = $('#lobby'), lobbyStatus = $('#lobby-status'), createBtn = $('#create-room'), joinForm = $('#join-form');
 const room = $('#room'), stage = $('#stage'), screens = $('#screens'), tiles = $('#tiles');
 const messages = $('#messages'), composer = $('#composer'), input = $('#message-input'), fileInput = $('#file-input'), attachmentsBox = $('#attachments');
 const micBtn = $('#mic-btn'), shareBtn = $('#share-btn'), leaveBtn = $('#leave-btn');
 const imageDialog = $('#image-dialog'), imageFull = $('#image-full'), imageDownload = $('#image-download');
 
 const state = {
-  peer: null, joined: false, isHost: false, room: '', password: '', hostId: '',
+  peer: null, joined: false, isHost: false, room: '', hostId: '', fallbackJoin: false,
   me: {id: '', name: ''},
   roster: new Map(),     // id -> nome (definido pelo anfitrião)
   members: new Map(),    // id -> {conn, audioCall, screenIn, screenOut, muted}
@@ -60,14 +61,6 @@ const state = {
 };
 
 // ---------- Lobby ----------
-function setMode(mode) {
-  lobbyForm.dataset.mode = mode;
-  lobbyForm.querySelectorAll('[role="tab"]').forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.mode === mode)));
-  lobbySubmit.textContent = mode === 'create' ? 'Criar sala' : 'Pedir para entrar';
-  setLobbyStatus('');
-}
-lobbyForm.querySelectorAll('[role="tab"]').forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.mode)));
-
 function parseRoom(value) {
   let code = String(value || '').trim().toLowerCase();
   const fromLink = code.match(/sala=([a-z0-9-]+)/);
@@ -81,34 +74,45 @@ function newRoomCode() {
   const chars = [...bytes].map(b => ROOM_ALPHABET[b % ROOM_ALPHABET.length]).join('');
   return chars.slice(0, 4) + '-' + chars.slice(4, 8) + '-' + chars.slice(8);
 }
-const linkedRoom = parseRoom(location.hash);
-if (linkedRoom) { setMode('join'); lobbyForm.elements.room.value = linkedRoom; }
+team.ready.push(() => {
+  const linked = parseRoom(location.hash);
+  if (!linked) return;
+  joinForm.elements.room.value = linked;
+  setLobbyStatus('Clique em "Entrar na sala" para participar.');
+});
 
 function setLobbyStatus(text, error = false) {
   lobbyStatus.textContent = text;
   lobbyStatus.classList.toggle('error', error);
 }
 function setBusy(busy) {
-  lobbySubmit.disabled = busy;
-  lobbyForm.querySelectorAll('input, [role="tab"]').forEach(el => { el.disabled = busy; });
+  createBtn.disabled = busy;
+  joinForm.querySelectorAll('input, button').forEach(el => { el.disabled = busy; });
+  document.querySelectorAll('[data-join-room]').forEach(el => { el.disabled = busy; });
 }
 
-lobbyForm.addEventListener('submit', async event => {
-  event.preventDefault();
+// mode: 'create' (sala nova) ou 'auto' (entra; se ninguém abriu a sala ainda, abre e vira anfitrião).
+async function startCall(mode, code) {
+  showView('meet');
+  if (state.peer) {
+    if (code && code !== state.room) toast('Saia da chamada atual antes de entrar em outra sala.', true);
+    return;
+  }
   if (!window.Peer) return setLobbyStatus('Não foi possível carregar o módulo de chamadas. Recarregue a página.', true);
   if (!window.RTCPeerConnection) return setLobbyStatus('Este navegador não suporta chamadas WebRTC.', true);
-  const mode = lobbyForm.dataset.mode;
-  const name = lobbyForm.elements.name.value.trim().slice(0, 40);
-  const password = lobbyForm.elements.password.value;
-  const code = parseRoom(lobbyForm.elements.room.value);
-  if (!name) return setLobbyStatus('Informe seu nome.', true);
-  if (mode === 'join' && !code) return setLobbyStatus('Código de sala inválido. Use o formato xxxx-xxxx-xxxx ou cole o link.', true);
-  if (password.length < 6) return setLobbyStatus('A senha precisa ter pelo menos 6 caracteres.', true);
   setBusy(true);
   setLobbyStatus('Preparando o microfone…');
   await setupAudio();
-  state.me.name = name;
-  if (mode === 'create') createRoom(password); else joinRoom(code, password);
+  state.me.name = team.member.name.slice(0, 40);
+  if (mode === 'create') createRoom(newRoomCode());
+  else createRoom(code, true);
+}
+createBtn.addEventListener('click', () => startCall('create'));
+joinForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const code = parseRoom(joinForm.elements.room.value);
+  if (!code) return setLobbyStatus('Código de sala inválido. Use o formato xxxx-xxxx-xxxx ou cole o link.', true);
+  startCall('auto', code);
 });
 
 function lobbyFail(message) {
@@ -174,6 +178,16 @@ function makePeer(id) {
   return peer;
 }
 function onPeerError(err) {
+  if (!state.joined && err.type === 'unavailable-id' && state.fallbackJoin) {
+    // A sala já está aberta por alguém: entra como convidado.
+    const code = state.room, peer = state.peer;
+    state.peer = null;
+    state.isHost = false;
+    state.fallbackJoin = false;
+    peer?.destroy();
+    joinRoom(code);
+    return;
+  }
   if (!state.joined) {
     const reasons = {
       'unavailable-id': 'Esse código de sala já está em uso. Tente criar de novo.',
@@ -188,42 +202,68 @@ function onPeerError(err) {
   if (err.type !== 'peer-unavailable') console.warn('[sala]', err.type, err);
 }
 
-function createRoom(password) {
+async function registerTicket(peerId, code) {
+  const {error} = await sb.from('room_tickets').insert({peer_id: peerId, room_code: code});
+  return error ? friendlyError(error) : null;
+}
+function createRoom(code, fallbackJoin = false) {
   state.isHost = true;
-  state.password = password;
-  state.room = newRoomCode();
-  state.hostId = HOST_PREFIX + state.room;
-  setLobbyStatus('Criando a sala…');
+  state.fallbackJoin = fallbackJoin;
+  state.room = code;
+  state.hostId = HOST_PREFIX + code;
+  setLobbyStatus(fallbackJoin ? 'Procurando a sala…' : 'Abrindo a sala…');
   const peer = makePeer(state.hostId);
-  peer.on('open', id => {
+  peer.on('open', async id => {
+    state.fallbackJoin = false;
+    const problem = await registerTicket(id, code);
+    if (state.peer !== peer) return;
+    if (problem) return lobbyFail('Não foi possível abrir a sala: ' + problem);
     state.me.id = id;
     state.roster.set(id, state.me.name);
     enterRoom();
-    systemMessage('Sala criada. Envie o link e, por outro canal, a senha para o time. Quem tiver os dois entra direto.');
+    systemMessage(fallbackJoin ? 'Você abriu a sala e é o anfitrião. Quem for do time e entrar com este link aparece aqui.' : 'Sala criada. Copie o link e mande para o time: só quem estiver logado entra.');
   });
 }
 
-function joinRoom(code, password) {
+async function hostIsFromTeam(code) {
+  // O anfitrião registra o ticket logo que abre a sala; uma segunda tentativa cobre essa pequena janela.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const {data} = await sb.rpc('verify_room_ticket', {p_peer_id: HOST_PREFIX + code, p_room_code: code});
+    if (data?.length) return true;
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  }
+  return false;
+}
+function joinRoom(code) {
   state.room = code;
   state.hostId = HOST_PREFIX + code;
-  setLobbyStatus('Conectando ao servidor…');
+  setLobbyStatus('Entrando na sala…');
   const peer = makePeer();
-  peer.on('open', id => {
+  peer.on('open', async id => {
     state.me.id = id;
-    setLobbyStatus('Procurando a sala…');
+    const problem = await registerTicket(id, code);
+    if (state.peer !== peer) return;
+    if (problem) return lobbyFail('Não foi possível registrar sua entrada: ' + problem);
     const conn = peer.connect(state.hostId, {reliable: true});
     let settled = false, timer;
     const settle = () => { settled = true; clearTimeout(timer); };
     const failAfter = (ms, message) => { clearTimeout(timer); timer = setTimeout(() => { if (!settled) { settle(); lobbyFail(message); } }, ms); };
     failAfter(CONNECT_TIMEOUT, 'A sala existe, mas não foi possível conectar com ela. A rede pode estar bloqueando chamadas (VPN ou firewall muito restritivo). Tente outra rede, como o 4G do celular.');
-    conn.on('open', () => {
-      conn.send({type: 'knock', name: state.me.name, password});
-      setLobbyStatus('Conferindo a senha…');
+    conn.on('open', async () => {
+      failAfter(ANSWER_TIMEOUT, 'A sala não respondeu. Tente de novo.');
+      setLobbyStatus('Conferindo a sala…');
+      if (!await hostIsFromTeam(code)) {
+        if (!settled) { settle(); lobbyFail('Essa sala não foi aberta por alguém do time.'); }
+        return;
+      }
+      if (settled) return;
+      conn.send({type: 'knock'});
+      setLobbyStatus('Entrando…');
       failAfter(ANSWER_TIMEOUT, 'A sala não respondeu. Tente de novo.');
     });
     conn.on('data', msg => {
       if (settled || !msg || typeof msg !== 'object') return;
-      if (msg.type === 'denied') { settle(); lobbyFail('Senha incorreta.'); }
+      if (msg.type === 'denied') { settle(); lobbyFail('O anfitrião não conseguiu confirmar seu login no time. Saia da conta, entre de novo e tente outra vez.'); }
       else if (msg.type === 'welcome') { settle(); onWelcome(conn, msg); }
     });
     conn.on('close', () => { if (!settled) { settle(); lobbyFail('A sala encerrou a conexão.'); } });
@@ -277,22 +317,16 @@ function releasePending() {
   });
 }
 
-// ---------- Anfitrião: confere a senha ----------
-function safeEqual(a, b) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
+// ---------- Anfitrião: confere o login de quem entra ----------
 function handleKnock(conn) {
   const timer = setTimeout(() => conn.close(), KNOCK_TIMEOUT);
-  const first = msg => {
+  const first = async msg => {
     conn.off('data', first);
     clearTimeout(timer);
-    if (!msg || msg.type !== 'knock' || typeof msg.name !== 'string') return conn.close();
-    const name = msg.name.trim().slice(0, 40) || 'Sem nome';
-    if (!safeEqual(String(msg.password || ''), state.password)) return deny(conn, 'senha');
-    admit(conn, name);
+    if (!msg || msg.type !== 'knock') return conn.close();
+    const {data, error} = await sb.rpc('verify_room_ticket', {p_peer_id: conn.peer, p_room_code: state.room});
+    if (error || !data?.length) return deny(conn, 'acesso');
+    if (conn.open) admit(conn, data[0].name.slice(0, 40));
   };
   conn.on('data', first);
 }
@@ -460,7 +494,7 @@ function enterRoom() {
   room.hidden = false;
   $('#room-info').hidden = false;
   $('#room-code').textContent = state.room;
-  history.replaceState(null, '', '#sala=' + state.room);
+  showView('meet');
   if (!state.micAvailable) systemMessage('Microfone indisponível: você entrou só ouvindo.');
   watchLevel(state.me.id, state.localStream);
   updateControls();
@@ -509,9 +543,8 @@ function stopShare() {
 leaveBtn.addEventListener('click', async () => {
   leaveBtn.disabled = true;
   for (const fn of hooks.leave) await fn();
-  const wasHost = state.isHost;
   teardown();
-  if (wasHost) history.replaceState(null, '', location.pathname);
+  history.replaceState(null, '', location.pathname + '#meet');
   location.reload();
 });
 $('#copy-link').addEventListener('click', async event => {
