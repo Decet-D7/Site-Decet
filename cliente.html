@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Área do cliente — DECET</title>
+<meta content="Área do cliente DECET: acompanhe serviços contratados, prazos, reuniões, chamados, relatórios e financeiro." name="description"/>
+<meta content="#0a0a0a" name="theme-color"/><meta content="no-referrer" name="referrer"/>
+<link href="https://www.decet.com.br/cliente" rel="canonical"/>
+<script>/* Login só por HTTPS: redireciona quem abrir por http. */if(location.protocol==="http:"&&!/^(localhost|127\.0\.0\.1)$/.test(location.hostname))location.replace("https:"+location.href.slice(5));</script>
+<link href="assets/mark.svg" rel="icon" type="image/svg+xml"/>
+<link href="css/styles.css" rel="stylesheet"/><link href="css/editorial.css" rel="stylesheet"/><link href="css/experience.css" rel="stylesheet"/><link href="css/refinement.css" rel="stylesheet"/><link href="css/projetos.css" rel="stylesheet"/><link href="css/meet.css" rel="stylesheet"/><link href="css/team.css" rel="stylesheet"/><link href="css/cliente.css" rel="stylesheet"/>
+<script defer="" src="js/vendor/supabase.js"></script><script defer="" src="js/client-common.js"></script><script defer="" src="js/cliente.js"></script></head>
+<body class="portal">
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+<header class="header"><a aria-label="DECET — Início" class="brand" href="index.html"><img alt="" height="38" src="assets/mark.svg" width="35"/><span>D<span class="brand-e">E</span>CET</span></a><span class="header-caption">ESTRATÉGIA, CONECTADA À EXECUÇÃO.</span><nav aria-label="Principal" class="header-nav"><a class="nav-home" href="index.html">Início</a><a href="projetos.html">Projetos</a><a aria-current="page" href="cliente.html"><span class="nav-long">Área do </span>cliente</a></nav><a class="header-cta" href="index.html#contato">Iniciar conversa</a></header>
+<main id="conteudo">
+
+<section aria-labelledby="portal-login-title" class="section portal-login" hidden="" id="portal-auth">
+<div class="portal-login-grid">
+<div>
+<p class="eyebrow">ÁREA DO CLIENTE / DECET</p>
+<h1 id="portal-login-title">Seu projeto.<br/><em>Num só lugar.</em></h1>
+<p class="portal-lead">Acompanhe os serviços contratados, os prazos, as reuniões, os chamados, os relatórios e o financeiro, sempre atualizados pela equipe DECET.</p>
+<ul class="lobby-points"><li>O acesso é criado pela DECET com o e-mail da sua empresa.</li><li>No primeiro acesso, use o código de convite que você recebeu.</li><li>Esqueceu a senha? Peça um código de nova senha à DECET.</li></ul>
+</div>
+<div class="auth-card">
+<div aria-label="Acesso" class="mode-tabs" role="tablist">
+<button aria-selected="true" data-auth="login" role="tab" type="button">Entrar</button>
+<button aria-selected="false" data-auth="signup" role="tab" type="button">Primeiro acesso</button>
+<button aria-selected="false" data-auth="reset" role="tab" type="button">Esqueci a senha</button>
+</div>
+<form data-mode="login" id="auth-form" novalidate="">
+<label>E-mail<input autocomplete="username" name="email" placeholder="voce@suaempresa.com.br" required="" type="email"/></label>
+<label class="auth-code">Código <span class="code-kind">de convite</span><input autocapitalize="characters" autocomplete="one-time-code" maxlength="12" name="code" placeholder="Recebido da DECET" spellcheck="false"/></label>
+<label>Senha<input autocomplete="current-password" minlength="8" name="password" required="" type="password"/></label>
+<label class="auth-confirm">Confirme a senha<input autocomplete="new-password" minlength="8" name="password2" type="password"/></label>
+<p class="lobby-hint" id="auth-hint">Use o e-mail cadastrado pela DECET.</p>
+<button class="button gold" id="auth-submit" type="submit">Entrar</button>
+<p aria-live="polite" class="lobby-status" id="auth-status" role="status"></p>
+</form>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="portal-client" class="section portal-app" hidden="" id="portal-app">
+<div class="portal-head">
+<div><p class="eyebrow">ÁREA DO CLIENTE</p><h1 id="portal-client"></h1><p class="portal-user" id="portal-user"></p></div>
+<div class="portal-actions">
+<label class="viewas" hidden="" id="portal-viewas">Vendo como a empresa<select id="portal-client-select"></select></label>
+<button class="chip" id="portal-logout" type="button">Sair</button>
+</div>
+</div>
+<p class="viewas-note" hidden="" id="portal-viewas-note">Você é da equipe DECET: esta é a área exatamente como o cliente vê. Pedidos e respostas ficam desativados aqui; use a aba Clientes do espaço do time.</p>
+<div aria-label="Seções da área do cliente" class="portal-tabs" id="portal-tabs" role="tablist"></div>
+<div class="portal-body" id="portal-body"></div>
+</section>
+</main>
+<footer class="footer"><a aria-label="DECET — Voltar ao início" class="brand" href="index.html"><img alt="" height="38" src="assets/mark.svg" width="35"/><span>DECET</span></a><p>Tecnologia • Consultoria • Inteligência de Dados</p><a href="index.html">Voltar ao início ↑</a><div class="footer-bottom"><span>© <span id="year">2026</span> DECET. Todos os direitos reservados.</span><span>Inteligência que transforma negócios.</span></div></footer>
+
+<dialog aria-labelledby="request-title" class="form-dialog" id="request-dialog"><form id="request-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow" id="request-kind">PEDIDO DE REUNIÃO</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="request-title">Pedir uma reunião</h2>
+<label>Assunto<input maxlength="160" name="subject" required=""/></label>
+<label>Descrição<textarea maxlength="5000" name="description" placeholder="Conte o contexto e o que precisa ser tratado." rows="4"></textarea></label>
+<fieldset class="mode-pick only-meeting"><legend>Urgência</legend><label class="check"><input checked="" name="urgency" type="radio" value="normal"/> Normal</label><label class="check"><input name="urgency" type="radio" value="urgente"/> Emergencial (a equipe recebe um alerta)</label></fieldset>
+<label class="only-meeting">Horários de preferência<input maxlength="500" name="preferred_times" placeholder="Ex.: terça ou quarta à tarde"/></label>
+<label class="only-support">Prioridade<select name="priority"><option value="baixa">Baixa</option><option selected="" value="normal">Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></label>
+<p aria-live="polite" class="lobby-status" id="request-status" role="status"></p>
+<div class="dialog-actions"><button class="button gold" type="submit">Enviar pedido</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="ticket-view-title" class="form-dialog wide" id="ticket-view-dialog"><form id="ticket-view-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow" id="ticket-view-kind">CHAMADO</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="ticket-view-title"></h2>
+<p class="card-meta" id="ticket-view-meta"></p>
+<p class="ticket-desc" id="ticket-view-desc"></p>
+<ol class="ticket-thread" id="ticket-view-thread"></ol>
+<label id="ticket-view-reply">Responder<textarea maxlength="5000" name="body" rows="3"></textarea></label>
+<div class="dialog-actions"><button class="button gold" id="ticket-view-send" type="submit">Enviar resposta</button><button class="chip dialog-x" type="button">Fechar</button></div>
+</form></dialog>
+<div aria-live="polite" class="toast" hidden="" id="toast" role="status"></div>
+<noscript><p class="noscript">Ative o JavaScript para usar a área do cliente.</p></noscript>
+</body></html>

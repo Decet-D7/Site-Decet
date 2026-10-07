@@ -11,7 +11,7 @@
 <link href="css/styles.css" rel="stylesheet"/><link href="css/meet.css" rel="stylesheet"/><link href="css/team.css" rel="stylesheet"/>
 <script defer="" src="js/vendor/peerjs.min.js"></script><script defer="" src="js/vendor/supabase.js"></script>
 <script defer="" src="js/team.js"></script><script defer="" src="js/meet.js"></script><script defer="" src="js/meet-board.js"></script><script defer="" src="js/board-shapes.js"></script><script defer="" src="js/meet-board-smart.js"></script><script defer="" src="js/meet-record.js"></script>
-<script defer="" src="js/agenda.js"></script><script defer="" src="js/kanban.js"></script><script defer="" src="js/team-admin.js"></script></head>
+<script defer="" src="js/client-common.js"></script><script defer="" src="js/agenda.js"></script><script defer="" src="js/kanban.js"></script><script defer="" src="js/team-admin.js"></script><script defer="" src="js/clients-admin.js"></script></head>
 <body class="meet">
 
 <section aria-labelledby="auth-title" class="auth" hidden="" id="auth">
@@ -47,6 +47,7 @@
 <a class="nav-item" data-view="meet" href="#meet"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 6h11v12H4zM15 10l5-3v10l-5-3"></path></svg><span>Reunião</span><i aria-hidden="true" class="nav-badge"></i></a>
 <a class="nav-item" data-view="agenda" href="#agenda"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 5h16v15H4zM4 9h16M8 3v4M16 3v4M8 13h3M8 16h6"></path></svg><span>Agenda</span><i aria-hidden="true" class="nav-badge"></i></a>
 <a class="nav-item" data-view="kanban" href="#kanban"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v13h-4z"></path></svg><span>Kanban</span><i aria-hidden="true" class="nav-badge"></i></a>
+<a class="nav-item" data-view="clients" href="#clients"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13M9 21v-6h6v6M3 21h18M8 10h.01M12 10h.01M16 10h.01"></path></svg><span>Clientes</span><i aria-hidden="true" class="nav-badge"></i></a>
 <a class="nav-item" data-view="team" href="#team" hidden=""><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14a6 6 0 0 1 3.5 6"></path></svg><span>Equipe</span><i aria-hidden="true" class="nav-badge"></i></a>
 </div>
 <a class="call-pill" data-view="meet" hidden="" href="#meet" id="call-pill"><i aria-hidden="true"></i>Em chamada · voltar</a>
@@ -59,6 +60,7 @@
 
 <main class="workspace" id="conteudo">
 <div aria-live="polite" class="upcoming-banner" hidden="" id="upcoming-banner"></div>
+<div aria-live="assertive" class="upcoming-banner client-alert" hidden="" id="client-alert"></div>
 
 <section aria-label="Reunião" class="view view-meet" data-view-panel="meet">
 <header class="meet-top">
@@ -140,6 +142,14 @@
 <div class="board-columns" id="kanban-board"><p class="empty">Carregando…</p></div>
 </section>
 
+<section aria-labelledby="clients-title" class="view view-clients" data-view-panel="clients" hidden="">
+<header class="view-head"><div><p class="eyebrow">ÁREA DO CLIENTE</p><h1 id="clients-title">Clientes</h1></div><div class="head-actions"><a class="chip" href="cliente.html" rel="noopener" target="_blank">Abrir a área do cliente</a><button class="button gold admin-only" hidden="" id="client-new" type="button">Nova empresa</button></div></header>
+<div class="clients-layout">
+<aside aria-label="Empresas" class="clients-list"><input aria-label="Buscar empresa" id="clients-search" placeholder="Buscar empresa" type="search"/><ul id="clients-ul"><li class="empty">Carregando…</li></ul></aside>
+<div class="client-detail" id="client-detail"></div>
+</div>
+</section>
+
 <section aria-labelledby="team-title" class="view view-team" data-view-panel="team" hidden="">
 <header class="view-head"><div><p class="eyebrow">CONTROLE DE LOGINS</p><h1 id="team-title">Equipe</h1></div><button class="button gold" id="member-new" type="button">Cadastrar pessoa</button></header>
 <div class="table-wrap"><table class="team-table"><thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Papel</th><th scope="col">Situação</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead><tbody id="team-rows"></tbody></table></div>
@@ -162,6 +172,7 @@
 <label>Título<input maxlength="120" name="title" required=""/></label>
 <div class="form-row"><label>Data<input name="date" required="" type="date"/></label><label>Início<input name="time" required="" type="time"/></label>
 <label>Duração<select name="duration"><option value="15">15 min</option><option selected="" value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1 h 30</option><option value="120">2 h</option><option value="180">3 h</option></select></label></div>
+<label>Cliente<select name="client_id"></select></label>
 <label>Pauta<textarea maxlength="2000" name="description" rows="4"></textarea></label>
 <p aria-live="polite" class="lobby-status" id="meeting-status" role="status"></p>
 <div class="dialog-actions"><button class="button gold" type="submit">Salvar</button><button class="chip danger" hidden="" id="meeting-delete" type="button">Excluir</button><button class="chip dialog-x" type="button">Cancelar</button></div>
@@ -203,6 +214,70 @@
 <label>Dados<textarea name="data" placeholder="Cole do Excel ou Google Sheets, ou digite um rótulo e um valor por linha, separados por ponto e vírgula. Ex.: Jan; 10" rows="8"></textarea></label>
 </div><div class="chart-preview"><canvas height="600" id="chart-canvas" width="960"></canvas><p aria-live="polite" class="lobby-status" id="chart-status"></p></div></div>
 <div class="dialog-actions"><button class="button gold" type="submit">Inserir na lousa</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="client-dialog-title" class="form-dialog" id="client-dialog"><form id="client-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">CLIENTES</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="client-dialog-title">Nova empresa</h2>
+<label>Nome da empresa<input maxlength="120" name="name" required=""/></label>
+<label>Observações internas (o cliente não vê)<textarea maxlength="4000" name="notes" rows="3"></textarea></label>
+<label class="check" id="client-active-row"><input name="active" type="checkbox"/> Empresa ativa (desmarcar bloqueia todos os acessos dela)</label>
+<p aria-live="polite" class="lobby-status" id="client-status" role="status"></p>
+<div class="dialog-actions"><button class="button gold" type="submit">Salvar</button><button class="chip danger" hidden="" id="client-delete" type="button">Excluir empresa</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="client-user-title" class="form-dialog" id="client-user-dialog"><form id="client-user-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">ACESSO DO CLIENTE</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="client-user-title">Novo acesso</h2>
+<label>Nome<input maxlength="80" name="name" required=""/></label>
+<label>E-mail<input name="email" required="" type="email"/></label>
+<p aria-live="polite" class="lobby-status" id="client-user-status" role="status">Depois de salvar, aparece o código de convite para enviar à pessoa.</p>
+<div class="dialog-actions"><button class="button gold" type="submit">Salvar e gerar convite</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="service-dialog-title" class="form-dialog" id="service-dialog"><form id="service-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">SERVIÇO CONTRATADO</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="service-dialog-title">Novo serviço</h2>
+<label>Serviço<input maxlength="160" name="title" required=""/></label>
+<label>Descrição (o cliente vê)<textarea maxlength="4000" name="description" rows="3"></textarea></label>
+<div class="form-row"><label>Situação<select name="status"><option value="planejamento">Planejamento</option><option value="em_andamento">Em andamento</option><option value="em_validacao">Em validação</option><option value="concluido">Concluído</option><option value="pausado">Pausado</option></select></label>
+<label>Início<input name="start_date" type="date"/></label><label>Prazo final<input name="due_date" type="date"/></label></div>
+<label>Progresso <output id="service-progress-out">0%</output><input max="100" min="0" name="progress" step="5" type="range" value="0"/></label>
+<p class="view-note">Os marcos (entregas com prazo) ficam no cartão do serviço, depois de salvar.</p>
+<p aria-live="polite" class="lobby-status" id="service-status" role="status"></p>
+<div class="dialog-actions"><button class="button gold" type="submit">Salvar</button><button class="chip danger" hidden="" id="service-delete" type="button">Excluir serviço</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="team-ticket-title" class="form-dialog wide" id="team-ticket-dialog"><form id="team-ticket-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">CHAMADO DO CLIENTE</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="team-ticket-title"></h2>
+<p class="card-meta" id="team-ticket-meta"></p>
+<p class="ticket-desc" id="team-ticket-desc"></p>
+<p class="ticket-times" hidden="" id="team-ticket-times"></p>
+<div class="ticket-controls"><label>Situação<select name="status"><option value="aberto">Aberto</option><option value="em_andamento">Em andamento</option><option value="aguardando_cliente">Aguardando cliente</option><option value="resolvido">Resolvido</option><option value="cancelado">Cancelado</option></select></label>
+<button class="button gold" hidden="" id="team-ticket-schedule" type="button">Agendar esta reunião</button><span class="card-meta" id="team-ticket-meeting"></span></div>
+<ol class="ticket-thread" id="team-ticket-thread"></ol>
+<label>Responder ao cliente<textarea maxlength="5000" name="body" rows="3"></textarea></label>
+<div class="dialog-actions"><button class="button gold" type="submit">Enviar resposta</button><button class="chip dialog-x" type="button">Fechar</button></div>
+</form></dialog>
+<dialog aria-labelledby="file-dialog-title" class="form-dialog" id="file-dialog"><form id="file-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">RELATÓRIOS E DOCUMENTOS</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="file-dialog-title">Adicionar</h2>
+<div class="form-row"><label>Tipo<select name="category"><option value="relatorio">Relatório</option><option value="documento">Documento</option><option value="contrato">Contrato</option></select></label>
+<label>Serviço (opcional)<select name="service_id"></select></label></div>
+<label>Título<input maxlength="160" name="title" required=""/></label>
+<label>Descrição (opcional)<textarea maxlength="2000" name="description" rows="2"></textarea></label>
+<fieldset class="mode-pick"><legend>Enviar como</legend><label class="check"><input checked="" name="mode" type="radio" value="arquivo"/> Arquivo</label><label class="check"><input name="mode" type="radio" value="link"/> Link (Drive, Power BI…)</label></fieldset>
+<label id="file-pick">Arquivo (até 25 MB: PDF, imagem, planilha, documento, CSV, XML ou ZIP)<input name="file" type="file"/></label>
+<label hidden="" id="file-link">Link<input name="link_url" placeholder="https://" type="url"/></label>
+<p aria-live="polite" class="lobby-status" id="file-status" role="status"></p>
+<div class="dialog-actions"><button class="button gold" type="submit">Enviar</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="invoice-dialog-title" class="form-dialog" id="invoice-dialog"><form id="invoice-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">FINANCEIRO</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="invoice-dialog-title">Nova fatura</h2>
+<label>Descrição<input maxlength="300" name="description" placeholder="Ex.: Mensalidade de outubro" required=""/></label>
+<div class="form-row"><label>Número<input maxlength="40" name="number" placeholder="Opcional"/></label><label>Valor (R$)<input inputmode="decimal" name="amount" placeholder="1.500,00" required=""/></label><label>Vencimento<input name="due_date" required="" type="date"/></label></div>
+<div class="form-row"><label>Situação<select name="status"><option value="aberta">Em aberto</option><option value="paga">Paga</option><option value="cancelada">Cancelada</option></select></label><label>Pago em<input name="paid_at" type="date"/></label><label>Link de pagamento<input name="payment_url" placeholder="https://" type="url"/></label></div>
+<div class="form-row two"><label>Boleto (PDF)<input name="boleto" type="file"/><small id="invoice-boleto-now"></small></label><label>Nota fiscal (PDF ou XML)<input name="nota" type="file"/><small id="invoice-nota-now"></small></label></div>
+<p aria-live="polite" class="lobby-status" id="invoice-status" role="status"></p>
+<div class="dialog-actions"><button class="button gold" type="submit">Salvar</button><button class="chip danger" hidden="" id="invoice-delete" type="button">Excluir fatura</button><button class="chip dialog-x" type="button">Cancelar</button></div>
 </form></dialog>
 <div aria-live="polite" class="toast" hidden="" id="toast" role="status"></div>
 <div aria-hidden="true" hidden="" id="audio-sink"></div>

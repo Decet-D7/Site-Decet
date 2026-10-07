@@ -88,6 +88,7 @@
 .mono{font-family:Consolas,monospace;font-size:13px;color:var(--stone)}
 .status{font-size:12px;padding:3px 9px;border:1px solid var(--line);white-space:nowrap}.status.on{color:#bfe3cc;border-color:#2e7d4f}.status.wait{color:var(--gold);border-color:#665e4b}.status.off{color:#f0c9bb;border-color:#8e5643}
 .row-actions{display:flex;flex-wrap:nowrap;gap:6px;justify-content:flex-end}.row-actions .chip{padding:6px 10px}
+.team-table td.row-actions{display:table-cell;text-align:right;white-space:nowrap}.team-table td.row-actions>*+*{margin-left:6px}
 
 /* ---------- Diálogos de formulário ---------- */
 .form-dialog{background:#0d0e0b;color:var(--ivory);border-color:#665e4b;max-width:560px}.form-dialog.wide{max-width:760px}
@@ -121,3 +122,55 @@
   .form-dialog .form-row{grid-template-columns:1fr;gap:0}.chart-layout{grid-template-columns:1fr}.lobby-upcoming li{grid-template-columns:1fr auto}.lobby-upcoming .when{grid-column:1/3}
   .kcol{flex-basis:84vw}.kanban-filters{width:100%}.kanban-filters input[type=search]{flex:1;width:auto}
 }
+
+/* ---------- Clientes (espaço do time) ---------- */
+.head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.client-alert{background:#2a1a16;border-bottom-color:#8e5643}.client-alert .dot{background:#e0533d}
+.clients-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;align-items:start}
+.clients-list{border:1px solid var(--line);background:#11120f;padding:12px}.clients-list input{min-height:40px;font-size:14px;margin-bottom:8px}
+.clients-list ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:60svh;overflow-y:auto}
+.client-item{width:100%;display:flex;align-items:center;gap:8px;background:none;border:0;border-left:2px solid transparent;color:var(--stone);text-align:left;padding:10px;font-size:14px}
+.client-item:hover{background:#17180f;color:var(--ivory)}.client-item.active{background:#1d1c14;color:var(--ivory);border-left-color:var(--gold)}.client-item.inactive{opacity:.55}
+.client-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.client-item small{font-size:11px;color:var(--muted)}
+.count{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--gold);color:var(--carbon);font-size:11px;display:inline-grid;place-items:center;margin-left:6px}
+.client-head{display:flex;justify-content:space-between;align-items:start;gap:16px;flex-wrap:wrap;margin-bottom:14px}.client-head h2{font-size:30px;letter-spacing:-.03em}
+.client-notes{font-size:13px;color:var(--muted);margin-top:6px;white-space:pre-wrap;max-width:640px}
+.sub-tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.sub-tabs button{background:none;border:0;color:var(--muted);padding:10px 0;font-size:14px;position:relative;white-space:nowrap}
+.sub-tabs button[aria-selected="true"]{color:var(--ivory)}.sub-tabs button[aria-selected="true"]:after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--gold)}
+.sub-panel{display:flex;flex-direction:column;gap:12px}.panel-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.panel-actions .view-note{margin:0}.panel-actions .button{margin-left:auto}
+.client-badge{font-size:11px;letter-spacing:.06em;color:var(--gold);border:1px solid #665e4b;padding:2px 8px}
+.service-card{border:1px solid var(--line);background:#11120f;padding:16px 18px}
+.service-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.service-top h3{font-size:19px;letter-spacing:-.02em;margin-right:auto}
+.service-desc{font-size:14px;color:var(--stone);margin-top:8px;white-space:pre-wrap}
+.progress{height:8px;background:#26261e;margin-top:12px;overflow:hidden}.progress i{display:block;height:100%;background:var(--gold)}
+.service-meta{font-size:12px;color:var(--muted);margin-top:6px}
+.status.svc-em_andamento,.status.tk-em_andamento{color:var(--gold);border-color:#665e4b}.status.svc-concluido,.status.tk-resolvido{color:#bfe3cc;border-color:#2e7d4f}
+.status.svc-pausado,.status.tk-cancelado{color:var(--muted)}.status.svc-em_validacao,.status.tk-aguardando_cliente{color:#a9c7ef;border-color:#2563a8}.status.tk-aberto{color:#f0c9bb;border-color:#8e5643}.status.late{color:#f0c9bb;border-color:#8e5643;background:#2a1a16}
+.milestones{list-style:none;margin:12px 0 0;padding:0;border-top:1px solid var(--line)}
+.milestones li{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #1d1d17;font-size:14px}.milestones .check{flex:1;margin:0}
+.milestones .due{font-size:12px;color:var(--muted)}.milestones li.late .due{color:#f0c9bb}.milestones li.soon .due{color:var(--gold)}
+.milestones input:checked+span{text-decoration:line-through;color:var(--muted)}
+.icon-x{background:none;border:0;color:var(--muted);font-size:18px;padding:0 4px;line-height:1}.icon-x:hover{color:#f0c9bb}
+.milestone-add{display:flex;gap:10px;margin-top:10px;align-items:center}.milestone-add input{min-height:38px;font-size:13px;padding:6px 0}.milestone-add input[type=date]{max-width:160px;color-scheme:dark}
+.ticket-list,.file-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ticket-row{width:100%;display:grid;grid-template-columns:130px minmax(0,1fr) auto auto;gap:6px 14px;align-items:center;text-align:left;background:#11120f;border:1px solid var(--line);color:var(--ivory);padding:12px 14px;font-size:14px}
+.ticket-row:hover{border-color:#665e4b}.ticket-row.fresh{border-left:3px solid #e0533d}.ticket-row small{grid-column:2/5;color:var(--muted);font-size:12px}
+.ticket-kind{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}.ticket-row b{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prio{font-size:11px;padding:2px 8px;border:1px solid var(--line);color:var(--stone)}.prio-alta{color:var(--gold);border-color:#665e4b}.prio-urgente{color:#fff;background:#c0392b;border-color:#c0392b}
+.ticket-desc{font-size:14px;color:var(--stone);white-space:pre-wrap;margin:10px 0}.ticket-times{font-size:13px;color:var(--gold);margin-bottom:10px}
+.ticket-controls{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin-bottom:12px}.ticket-controls label{min-width:200px;margin:0}
+.ticket-thread{list-style:none;margin:0 0 14px;padding:12px;display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;background:#11120f;border:1px solid var(--line)}
+.ticket-thread li{padding:10px 12px;border:1px solid var(--line);max-width:85%}.ticket-thread .msg-cliente{align-self:flex-start;background:#17180f}.ticket-thread .msg-equipe{align-self:flex-end;background:#1d1c14;border-color:#665e4b}
+.ticket-thread header{display:flex;gap:10px;align-items:baseline;font-size:12px;color:var(--muted)}.ticket-thread header b{font-weight:400;color:var(--gold)}.ticket-thread p{font-size:14px;white-space:pre-wrap;margin-top:4px}
+.file-list li{display:grid;grid-template-columns:110px minmax(0,1fr) auto auto;gap:14px;align-items:center;background:#11120f;border:1px solid var(--line);padding:12px 14px}
+.file-cat{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}.file-list b{font-weight:400}.file-list small{display:block;font-size:12px;color:var(--muted)}.file-list p{font-size:13px;color:var(--stone);margin-top:4px}
+.mode-pick{border:0;padding:0;margin:0 0 14px;display:flex;gap:18px;flex-wrap:wrap}.mode-pick legend{font-size:12px;color:var(--stone);margin-bottom:8px}
+.form-dialog .form-row.two{grid-template-columns:1fr 1fr}.form-dialog small{display:block;font-size:11px;color:var(--muted);margin-top:4px}
+.form-dialog input[type=file]{font-size:13px;border-bottom:0;min-height:0;padding:8px 0}.form-dialog input[type=range]{accent-color:var(--gold);border:0;min-height:0}
+.form-dialog output{color:var(--gold)}.form-dialog input[type=date]{color-scheme:dark}
+/* Cliente que entra pela sala: só a reunião (sem agenda, kanban, clientes nem equipe; não cria sala) */
+.client-mode .nav-item:not([data-view="meet"]),.client-mode #create-room,.client-mode .lobby-card>h3,.client-mode .lobby-card>.lobby-hint{display:none!important}
+.client-mode .join-form{margin-top:0;border-top:0;padding-top:0}
+@media(max-width:1100px){.clients-layout{grid-template-columns:1fr}.clients-list ul{max-height:none;flex-direction:row;flex-wrap:wrap}.client-item{width:auto}}
+@media(max-width:700px){.ticket-row{grid-template-columns:1fr auto}.ticket-row small{grid-column:1/3}.ticket-kind{grid-column:1/3}.file-list li{grid-template-columns:1fr auto}.file-cat{grid-column:1/3}.form-dialog .form-row.two{grid-template-columns:1fr}}

@@ -1,0 +1,40 @@
+/* Área do cliente (cliente.html). Reaproveita os componentes do espaço do time (team.css/meet.css). */
+.portal main{min-height:70svh}
+.portal input,.portal select,.portal textarea{display:block;border:0;border-bottom:1px solid #6c675b;border-radius:0;background:transparent;color:var(--ivory);width:100%;padding:12px 0;font-size:15px;min-height:46px}
+.portal input:focus,.portal select:focus,.portal textarea:focus{outline:0;border-bottom-color:var(--gold);box-shadow:0 1px 0 var(--gold)}
+.portal input::placeholder,.portal textarea::placeholder{color:#8d8a7f}.portal select{color-scheme:dark}.portal option{background:var(--carbon)}
+.portal input[type=radio],.portal input[type=checkbox]{width:16px;height:16px;min-height:0;padding:0;margin:0;accent-color:var(--gold);display:inline-block}
+.portal .check{display:flex;align-items:center;gap:8px}
+.portal-login-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:8%;align-items:center}
+.portal-login h1{font-size:clamp(42px,4.8vw,76px);line-height:1.04;letter-spacing:-.055em}.portal-login h1 em{color:var(--gold)}
+.portal-login .eyebrow{color:var(--gold);margin-bottom:26px}.portal-lead{margin-top:24px;color:var(--stone);max-width:520px}
+.portal-login .auth-card .button{width:100%;justify-content:center}.portal-login .lobby-hint{margin:4px 0 22px}
+.portal-head{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:8px}
+.portal-head .eyebrow{color:var(--gold);margin-bottom:12px}.portal-head h1{font-size:clamp(34px,3.6vw,56px);letter-spacing:-.045em}
+.portal-user{color:var(--stone);margin-top:8px}.portal-actions{display:flex;align-items:end;gap:14px;flex-wrap:wrap}
+.viewas{font-size:12px;color:var(--stone);min-width:240px}.viewas-note{font-size:13px;color:var(--gold);border-left:1px solid var(--gold);padding-left:14px;margin:14px 0}
+.portal-tabs{display:flex;gap:24px;border-bottom:1px solid var(--line);margin:18px 0 24px;overflow-x:auto}
+.portal-tabs button{background:none;border:0;color:var(--muted);padding:14px 0;font-size:15px;position:relative;white-space:nowrap}
+.portal-tabs button[aria-selected="true"]{color:var(--ivory)}.portal-tabs button[aria-selected="true"]:after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--gold)}
+.portal-tabs .count{background:#c0392b;color:#fff}
+.portal-panel{display:flex;flex-direction:column;gap:14px}
+.quick-actions{display:flex;gap:12px;flex-wrap:wrap}.quick-actions .button{padding:13px 22px}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.summary-card{border:1px solid var(--line);background:#11120f;padding:18px;display:flex;flex-direction:column;gap:12px}
+.summary-card .eyebrow{margin:0;color:var(--gold)}.summary-card strong{display:block;font-family:Georgia,serif;font-weight:400;font-size:26px;color:var(--ivory);letter-spacing:-.02em}
+.summary-card small{display:block;font-size:13px;color:var(--muted);margin-top:6px}.summary-card .attention{color:#f0c9bb}
+.summary-card .text-link{margin-top:auto;font-size:13px;gap:18px;align-self:flex-start;background:none;border-left:0;border-right:0;border-top:0;color:var(--stone);padding:0 0 6px}
+.summary-card .chip,.summary-card .button{margin-top:10px;align-self:flex-start}
+.deadline.late{color:#f0c9bb!important}.deadline.soon{color:var(--gold)!important}
+.portal-sub{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:400;margin-top:10px}
+.notice{border:1px solid #665e4b;background:#1d1c14;padding:12px 16px;font-size:14px;color:var(--stone)}.notice b{font-weight:400;color:var(--gold)}
+.milestones.readonly li{gap:10px}.milestones .mark{color:var(--gold);width:16px;text-align:center}.milestones .mark-title{flex:1}
+.milestones li.done .mark-title{color:var(--muted);text-decoration:line-through}
+.filter-chips{display:flex;gap:8px;flex-wrap:wrap}.filter-chips .chip[aria-pressed="true"]{border-color:var(--gold);color:var(--ivory);background:#2a2618}
+.finance-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.finance-summary div{border:1px solid var(--line);background:#11120f;padding:14px 16px}.finance-summary small{display:block;font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.finance-summary strong{display:block;font-family:Georgia,serif;font-weight:400;font-size:24px;color:var(--ivory);margin-top:6px}
+.button.small{padding:7px 14px;min-height:0;gap:0;font-size:13px}
+.status.late{color:#f0c9bb;border-color:#8e5643;background:#2a1a16}
+.portal .chip:disabled,.portal .button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:900px){.portal-login-grid{grid-template-columns:1fr;gap:34px}.finance-summary{grid-template-columns:1fr}.portal-head{align-items:start}}

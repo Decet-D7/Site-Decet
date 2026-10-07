@@ -12,7 +12,9 @@ const team = {
   byUser: new Map(),      // user_id -> membro
   ready: [],              // (member) login confirmado
   changed: [],            // () lista da equipe mudou
+  client: null,           // {id, name} quando quem entrou é cliente (só vê as reuniões da empresa)
   get isAdmin() { return this.member?.role === 'admin'; },
+  get isClient() { return !!this.client; },
   nameOf(userId) { return this.byUser.get(userId)?.name || 'Ex-integrante'; },
 };
 
@@ -54,9 +56,9 @@ document.querySelectorAll('dialog').forEach(dialog => {
 });
 
 // ---------- Navegação ----------
-const VIEWS = ['meet', 'agenda', 'kanban', 'team'];
+const VIEWS = ['meet', 'agenda', 'kanban', 'clients', 'team'];
 function showView(view) {
-  if (!VIEWS.includes(view) || (view === 'team' && !team.isAdmin)) view = 'meet';
+  if (!VIEWS.includes(view) || (view === 'team' && !team.isAdmin) || team.isClient) view = 'meet';
   document.querySelectorAll('[data-view-panel]').forEach(panel => { panel.hidden = panel.dataset.viewPanel !== view; });
   document.querySelectorAll('.nav-item').forEach(item => {
     const active = item.dataset.view === view;
@@ -76,6 +78,7 @@ document.querySelectorAll('[data-view]').forEach(link => link.addEventListener('
 
 // ---------- Equipe ----------
 async function loadMembers() {
+  if (team.isClient) { team.changed.forEach(fn => fn()); return; }   // cliente não vê a equipe
   const {data, error} = await sb.from('team_members').select('email, name, role, active, user_id, created_at').order('name');
   if (error) { toast(friendlyError(error), true); return; }
   team.members = data;
@@ -87,9 +90,10 @@ async function loadMembers() {
 }
 function renderMe() {
   document.getElementById('me-name').textContent = team.member.name;
-  document.getElementById('me-role').textContent = team.isAdmin ? 'Administrador' : 'Membro';
+  document.getElementById('me-role').textContent = team.isClient ? 'Cliente · ' + team.client.name : team.isAdmin ? 'Administrador' : 'Membro';
   document.getElementById('me-avatar').textContent = initials(team.member.name);
   document.querySelector('.nav-item[data-view="team"]').hidden = !team.isAdmin;
+  document.body.classList.toggle('client-mode', team.isClient);
 }
 
 // ---------- Login ----------
@@ -163,9 +167,17 @@ authForm.addEventListener('submit', async event => {
   }
 });
 
+// Cliente que abre o link de uma reunião entra só na sala (as regras do banco limitam às reuniões da empresa).
+async function clientLogin(user) {
+  const {data} = await sb.from('client_users').select('email, name, active, user_id, client_id, clients(name, active)').eq('user_id', user.id).maybeSingle();
+  if (!data || !data.active || !data.clients?.active) return null;
+  team.client = {id: data.client_id, name: data.clients.name};
+  return {email: data.email, name: data.name, role: 'cliente', active: true, user_id: data.user_id};
+}
 async function enterApp(user) {
   team.user = user;
-  const {data, error} = await sb.from('team_members').select('email, name, role, active, user_id').eq('user_id', user.id).maybeSingle();
+  let {data, error} = await sb.from('team_members').select('email, name, role, active, user_id').eq('user_id', user.id).maybeSingle();
+  if (!error && !data) data = await clientLogin(user);
   if (error || !data || !data.active) {
     team.user = null;
     await sb.auth.signOut({scope: 'local'});
@@ -177,7 +189,7 @@ async function enterApp(user) {
   authEl.hidden = true;
   appEl.hidden = false;
   await loadMembers();
-  sb.channel('team-members').on('postgres_changes', {event: '*', schema: 'public', table: 'team_members'}, () => loadMembers()).subscribe();
+  if (!team.isClient) sb.channel('team-members').on('postgres_changes', {event: '*', schema: 'public', table: 'team_members'}, () => loadMembers()).subscribe();
   // Quem é desativado deixa de receber eventos da tabela (RLS): confere o acesso de tempos em tempos.
   setInterval(checkAccess, 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) checkAccess(); });
@@ -187,7 +199,7 @@ async function enterApp(user) {
 }
 async function checkAccess() {
   if (!team.member) return;
-  const {data, error} = await sb.rpc('is_team_member');
+  const {data, error} = await sb.rpc(team.isClient ? 'is_client_user' : 'is_team_member');
   if (!error && data === false) await sb.auth.signOut();
 }
 document.getElementById('logout').addEventListener('click', async () => {

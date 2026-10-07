@@ -32,7 +32,7 @@ function downloadBlob(blob, name) {
 
 // ---------- Gravação ----------
 hooks.entered.push(() => {
-  recBtn.hidden = !state.isHost || !navigator.mediaDevices?.getDisplayMedia || !window.MediaRecorder;
+  recBtn.hidden = !state.isHost || team.isClient || !navigator.mediaDevices?.getDisplayMedia || !window.MediaRecorder;
   txBtn.hidden = false;
 });
 recBtn.addEventListener('click', () => {
