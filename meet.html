@@ -9,7 +9,7 @@
 <script>/* Microfone e tela só funcionam em HTTPS: redireciona quem abrir por http. */if(location.protocol==="http:"&&!/^(localhost|127\.0\.0\.1)$/.test(location.hostname))location.replace("https:"+location.href.slice(5));</script>
 <link href="assets/mark.svg" rel="icon" type="image/svg+xml"/>
 <link href="css/styles.css" rel="stylesheet"/><link href="css/meet.css" rel="stylesheet"/>
-<script defer="" src="js/vendor/peerjs.min.js"></script><script defer="" src="js/meet.js"></script></head>
+<script defer="" src="js/vendor/peerjs.min.js"></script><script defer="" src="js/meet.js"></script><script defer="" src="js/meet-board.js"></script><script defer="" src="js/meet-record.js"></script></head>
 <body class="meet">
 <header class="meet-top">
 <a aria-label="DECET — Início" class="brand" href="index.html"><img alt="" height="30" src="assets/mark.svg" width="28"/><span>D<span class="brand-e">E</span>CET</span></a>
@@ -26,8 +26,8 @@
 <div class="lobby-copy">
 <p class="eyebrow">DECET / USO INTERNO</p>
 <h1 id="lobby-title">Voz, chat e tela.<br/><em>Só para o time.</em></h1>
-<p>Áudio, tela e mensagens vão direto entre os participantes (WebRTC, criptografado). Nada fica gravado: ao sair, o histórico some.</p>
-<ul class="lobby-points"><li>Quem cria a sala define a senha. Quem tiver o link e a senha entra direto.</li><li>Cole imagens no chat com <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li><li>Compartilhamento de tela no navegador do computador.</li></ul>
+<p>Áudio, tela e mensagens vão direto entre os participantes (WebRTC, criptografado). Nada fica em servidor: ao sair, o histórico some. Gravações ficam no computador do anfitrião.</p>
+<ul class="lobby-points"><li>Quem cria a sala define a senha. Quem tiver o link e a senha entra direto.</li><li>Cole imagens no chat com <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li><li>Compartilhamento de tela, lousa, gravação e transcrição no navegador do computador.</li></ul>
 </div>
 <form class="lobby-card" data-mode="create" id="lobby-form" novalidate="">
 <div aria-label="O que você quer fazer?" class="mode-tabs" role="tablist">
@@ -46,27 +46,57 @@
 
 <section aria-label="Sala" class="room" hidden="" id="room">
 <div class="stage" id="stage">
+<div aria-live="polite" class="room-flags" id="room-flags"></div>
 <div aria-label="Telas compartilhadas" class="screens" id="screens"></div>
+<section aria-label="Lousa" class="board" hidden="" id="board">
+<div aria-label="Ferramentas da lousa" class="board-tools" role="toolbar">
+<div aria-label="Cor" class="board-colors" id="board-colors"></div>
+<div aria-label="Espessura" class="board-widths" id="board-widths"></div>
+<button aria-pressed="false" class="chip" id="board-eraser" type="button">Borracha</button>
+<button class="chip" id="board-undo" type="button">Desfazer</button>
+<button class="chip" id="board-clear" type="button">Limpar</button>
+<button class="chip" id="board-download" type="button">Baixar PNG</button>
+</div>
+<div class="board-surface"><canvas aria-label="Área de desenho compartilhada" id="board-canvas"></canvas></div>
+</section>
 <ul aria-label="Participantes" class="tiles" id="tiles"></ul>
+<div aria-live="polite" class="captions" id="captions"></div>
 </div>
 <div aria-label="Controles da chamada" class="controls" role="toolbar">
 <button aria-pressed="false" class="control" id="mic-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0M12 17v4M8 21h8"></path><path class="slash" d="M4 4l16 16"></path></svg><span>Microfone</span></button>
 <button aria-pressed="false" class="control" id="share-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M3 5h18v11H3zM8 20h8M12 16v4M12 13V8m-3 3 3-3 3 3"></path></svg><span>Compartilhar tela</span></button>
+<button aria-pressed="false" class="control" id="board-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M3 4h18v12H3zM12 16v4M8 20h8M7 12l3-4 2 3 2-2 3 3"></path></svg><span>Lousa</span><i aria-hidden="true" class="badge"></i></button>
+<button aria-pressed="false" class="control" id="tx-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 5h16v11H8l-4 4zM8 9h8M8 12h5"></path></svg><span>Transcrição</span></button>
+<button aria-pressed="false" class="control rec" hidden="" id="rec-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><circle class="dot" cx="12" cy="12" r="3.5"></circle></svg><span>Gravar</span></button>
 <button class="control leave" id="leave-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"></path></svg><span>Sair</span></button>
 </div>
 <aside aria-labelledby="chat-title" class="chat" id="chat">
-<h2 id="chat-title">Chat</h2>
+<div class="side-tabs" role="tablist"><button aria-controls="chat-panel" aria-selected="true" id="chat-title" role="tab" type="button">Chat</button><button aria-controls="transcript-panel" aria-selected="false" id="transcript-tab" role="tab" type="button">Transcrição</button></div>
+<div class="side-panel" id="chat-panel" role="tabpanel">
 <ol aria-live="polite" class="messages" id="messages" role="log"></ol>
 <form class="composer" id="composer">
 <div aria-label="Imagens para enviar" class="attachments" id="attachments"></div>
 <textarea aria-label="Mensagem" id="message-input" maxlength="4000" placeholder="Mensagem — cole imagens com Ctrl+V" rows="2"></textarea>
 <div class="composer-actions"><label class="chip attach">Imagem<input accept="image/png,image/jpeg,image/webp,image/gif" id="file-input" multiple="" type="file"/></label><span class="composer-hint">Enter envia · Shift+Enter quebra linha</span><button class="button gold send" type="submit">Enviar</button></div>
 </form>
+</div>
+<div aria-labelledby="transcript-tab" class="side-panel" hidden="" id="transcript-panel" role="tabpanel">
+<ol class="transcript" id="transcript"></ol>
+<p class="transcript-empty" id="transcript-empty">Ative a transcrição nos controles da chamada. Cada pessoa transcreve a própria fala (Chrome ou Edge).</p>
+<div class="transcript-actions"><button class="chip" id="transcript-download" type="button">Baixar transcrição (.txt)</button></div>
+</div>
 </aside>
 </section>
 </main>
 
 <dialog aria-label="Imagem ampliada" id="image-dialog"><img alt="" id="image-full"/><div class="image-actions"><a class="chip" download="" id="image-download">Baixar</a><button class="chip" id="image-close" type="button">Fechar</button></div></dialog>
+<dialog aria-labelledby="rec-title" id="rec-dialog"><div class="dialog-top"><span class="eyebrow">GRAVAÇÃO LOCAL</span><button aria-label="Fechar" class="dialog-close" id="rec-cancel-x" type="button">×</button></div>
+<h2 id="rec-title">Gravar a reunião</h2>
+<p>O vídeo fica só no seu computador: nada vai para servidor. Todos na sala veem o aviso de que a reunião está sendo gravada.</p>
+<ol class="rec-steps"><li id="rec-step-file"><b>1.</b> Escolha onde salvar o arquivo. <button class="chip" id="rec-pick" type="button">Escolher arquivo</button> <span id="rec-file"></span></li>
+<li><b>2.</b> Clique em começar e escolha <strong>esta aba</strong> no aviso do navegador. Assim a gravação mostra a sala inteira: telas, lousa e legendas.</li></ol>
+<div class="rec-actions"><button class="button gold" id="rec-start" type="button">Começar a gravar</button><button class="chip" id="rec-cancel" type="button">Cancelar</button></div>
+</dialog>
 <div aria-hidden="true" hidden="" id="audio-sink"></div>
 <noscript><p class="noscript">Ative o JavaScript para usar a sala.</p></noscript>
 </body></html>
