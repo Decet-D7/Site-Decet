@@ -2,7 +2,7 @@
 // Agenda do time: reuniões visíveis para todos os membros, atualizadas em tempo real.
 // Cada reunião tem uma sala própria (room_code): quem clicar primeiro em "Entrar" vira o anfitrião.
 
-const agenda = {items: [], loaded: false, reloadTimer: null, editing: null};
+const agenda = {items: [], loaded: false, reloadTimer: null, editing: null, preset: null};
 const dayFormat = new Intl.DateTimeFormat('pt-BR', {weekday: 'long', day: '2-digit', month: 'long'});
 const shortDay = new Intl.DateTimeFormat('pt-BR', {weekday: 'short', day: '2-digit', month: '2-digit'});
 const hourFormat = new Intl.DateTimeFormat('pt-BR', {hour: '2-digit', minute: '2-digit'});
@@ -14,7 +14,7 @@ const localTime = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
 
 async function loadMeetings() {
   const since = new Date(Date.now() - 60 * 86400000).toISOString();
-  const {data, error} = await sb.from('meetings').select('id, title, description, starts_at, duration_min, room_code, created_by').gte('starts_at', since).order('starts_at');
+  const {data, error} = await sb.from('meetings').select('id, title, description, starts_at, duration_min, room_code, created_by, client_id, ticket_id').gte('starts_at', since).order('starts_at');
   if (error) return toast(friendlyError(error), true);
   agenda.items = data.map(m => {
     const start = new Date(m.starts_at);
@@ -32,7 +32,8 @@ function meetingItem(m) {
   return h('article', {class: 'meeting' + (live ? ' live' : '')},
     h('div', {class: 'meeting-time'}, h('b', {text: hourFormat.format(m.start)}), h('small', {text: 'até ' + hourFormat.format(m.end)})),
     h('div', {class: 'meeting-body'},
-      h('h3', {}, m.title, live ? h('span', {class: 'live-badge', text: 'Acontecendo agora'}) : null),
+      h('h3', {}, m.title, live ? h('span', {class: 'live-badge', text: 'Acontecendo agora'}) : null,
+        m.client_id && !team.isClient ? h('span', {class: 'client-badge', text: 'Cliente: ' + (clientDirectory.get(m.client_id)?.name || '—')}) : null),
       m.description ? h('p', {class: 'meeting-desc', text: m.description}) : null,
       h('small', {text: 'Marcada por ' + team.nameOf(m.created_by) + ' · sala ' + m.room_code})),
     h('div', {class: 'meeting-actions'},
@@ -65,6 +66,7 @@ function renderAgenda() {
   }) : [h('p', {class: 'empty', text: 'Nenhuma reunião nos últimos 60 dias.'})]));
   renderLobbyUpcoming(upcoming);
   renderBanner(upcoming);
+  if (typeof cxAfterAgenda === 'function') cxAfterAgenda();
 }
 function renderLobbyUpcoming(upcoming) {
   const box = $('#lobby-upcoming');
@@ -91,15 +93,21 @@ function renderBanner(upcoming = agenda.items.filter(m => m.end.getTime() >= Dat
 setInterval(() => { if (agenda.loaded) renderAgenda(); }, 30000);
 
 // ---------- Criar e editar ----------
-function openMeeting(m = null) {
+// preset (opcional): {client_id, ticket_id, title, description} — usado ao agendar o pedido de um cliente.
+function openMeeting(m = null, preset = null) {
   agenda.editing = m;
+  agenda.preset = preset;
   meetingForm.reset();
+  const clientSelect = meetingForm.elements.client_id;
+  clientSelect.replaceChildren(h('option', {value: '', text: 'Reunião interna do time'}),
+    ...[...clientDirectory.values()].filter(c => c.active || c.id === m?.client_id).map(c => h('option', {value: c.id, text: c.name})));
+  clientSelect.value = m?.client_id || preset?.client_id || '';
   $('#meeting-dialog-title').textContent = m ? 'Editar reunião' : 'Nova reunião';
   $('#meeting-delete').hidden = !m;
   $('#meeting-status').textContent = '';
   let start = m ? m.start : new Date(Math.ceil(Date.now() / 1800000) * 1800000);
-  meetingForm.elements.title.value = m?.title || '';
-  meetingForm.elements.description.value = m?.description || '';
+  meetingForm.elements.title.value = m?.title || preset?.title || '';
+  meetingForm.elements.description.value = m?.description || preset?.description || '';
   meetingForm.elements.date.value = localDate(start);
   meetingForm.elements.time.value = localTime(start);
   const duration = String(m?.duration_min || 30);
@@ -116,13 +124,20 @@ meetingForm.addEventListener('submit', async event => {
   const start = new Date(f.date.value + 'T' + f.time.value);
   if (!title) { status.textContent = 'Dê um título para a reunião.'; return; }
   if (Number.isNaN(start.getTime())) { status.textContent = 'Escolha data e horário.'; return; }
-  const row = {title, description: f.description.value.trim(), starts_at: start.toISOString(), duration_min: Number(f.duration.value)};
-  const {error} = agenda.editing
-    ? await sb.from('meetings').update(row).eq('id', agenda.editing.id)
-    : await sb.from('meetings').insert(row);
+  const row = {title, description: f.description.value.trim(), starts_at: start.toISOString(), duration_min: Number(f.duration.value), client_id: f.client_id.value || null};
+  const ticketId = agenda.editing ? agenda.editing.ticket_id : agenda.preset?.ticket_id || null;
+  if (!agenda.editing && ticketId) row.ticket_id = ticketId;
+  const {data: saved, error} = agenda.editing
+    ? await sb.from('meetings').update(row).eq('id', agenda.editing.id).select('id').single()
+    : await sb.from('meetings').insert(row).select('id').single();
   if (error) { status.textContent = friendlyError(error); return; }
+  // Reunião pedida por um cliente: liga ao chamado e avisa o cliente na conversa do chamado.
+  if (ticketId && !agenda.editing) {
+    await sb.from('client_tickets').update({meeting_id: saved.id, status: 'em_andamento'}).eq('id', ticketId);
+    await sb.from('client_ticket_messages').insert({ticket_id: ticketId, body: 'Reunião marcada: ' + title + ', ' + dayFormat.format(start) + ' às ' + hourFormat.format(start) + '. O botão para entrar aparece em "Reuniões" na sua área do cliente.'});
+  }
   meetingDialog.close();
-  toast(agenda.editing ? 'Reunião atualizada.' : 'Reunião marcada. Todo o time já vê na agenda.');
+  toast(agenda.editing ? 'Reunião atualizada.' : row.client_id ? 'Reunião marcada. O cliente já vê na área dele.' : 'Reunião marcada. Todo o time já vê na agenda.');
   loadMeetings();
 });
 $('#meeting-delete').addEventListener('click', async () => {

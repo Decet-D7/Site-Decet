@@ -222,6 +222,7 @@ $('#kanban-search').addEventListener('input', e => { kb.search = e.target.value.
 $('#kanban-mine').addEventListener('change', e => { kb.mine = e.target.checked; renderKanban(); });
 
 team.ready.push(() => {
+  if (team.isClient) return;   // cliente não vê o kanban do time
   loadKanban();
   sb.channel('kanban')
     .on('postgres_changes', {event: '*', schema: 'public', table: 'kanban_cards'}, scheduleKanbanReload)

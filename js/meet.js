@@ -104,7 +104,8 @@ async function startCall(mode, code) {
   setBusy(true);
   setLobbyStatus('Preparando o microfone…');
   await setupAudio();
-  state.me.name = team.member.name.slice(0, 40);
+  // Cliente aparece para todos com o nome da empresa (igual ao que o anfitrião confere no banco).
+  state.me.name = (team.isClient ? team.member.name + ' (' + team.client.name + ')' : team.member.name).slice(0, 40);
   if (mode === 'create') createRoom(newRoomCode());
   else createRoom(code, true);
 }
