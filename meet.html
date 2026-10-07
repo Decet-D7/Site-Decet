@@ -10,7 +10,7 @@
 <link href="assets/mark.svg" rel="icon" type="image/svg+xml"/>
 <link href="css/styles.css" rel="stylesheet"/><link href="css/meet.css" rel="stylesheet"/><link href="css/team.css" rel="stylesheet"/>
 <script defer="" src="js/vendor/peerjs.min.js"></script><script defer="" src="js/vendor/supabase.js"></script>
-<script defer="" src="js/team.js"></script><script defer="" src="js/meet.js"></script><script defer="" src="js/meet-board.js"></script><script defer="" src="js/meet-record.js"></script>
+<script defer="" src="js/team.js"></script><script defer="" src="js/meet.js"></script><script defer="" src="js/meet-board.js"></script><script defer="" src="js/board-shapes.js"></script><script defer="" src="js/meet-board-smart.js"></script><script defer="" src="js/meet-record.js"></script>
 <script defer="" src="js/agenda.js"></script><script defer="" src="js/kanban.js"></script><script defer="" src="js/team-admin.js"></script></head>
 <body class="meet">
 
@@ -94,6 +94,7 @@
 <div aria-live="polite" class="room-flags" id="room-flags"></div>
 <div aria-label="Telas compartilhadas" class="screens" id="screens"></div>
 <section aria-label="Lousa" class="board" hidden="" id="board">
+<div class="board-bar"><button class="chip" id="chart-btn" type="button">Gráfico</button><label class="check"><input id="snap-always" type="checkbox"/> Ajustar todo traço</label><p class="board-tip"><b>Segure</b> no fim do traço para virar forma · termine a conta com <b>=</b></p></div>
 <p aria-live="polite" class="board-status" hidden="" id="board-status">Carregando a lousa…</p>
 <div class="board-host" id="board-host"></div>
 </section>
@@ -193,6 +194,16 @@
 <div class="dialog-actions"><button class="button gold" id="code-copy" type="button">Copiar mensagem</button><button class="chip dialog-x" type="button">Fechar</button></div>
 <p class="view-note">O código aparece só agora. Se perder, gere outro: o anterior deixa de valer.</p>
 </dialog>
+<dialog aria-labelledby="chart-title" class="form-dialog wide" id="chart-dialog"><form id="chart-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">LOUSA</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="chart-title">Inserir gráfico</h2>
+<div class="chart-layout"><div>
+<label>Tipo<select name="type"><option value="pie">Pizza</option><option value="doughnut">Rosca</option><option value="bar">Barras</option><option value="barh">Barras horizontais</option><option value="line">Linhas</option></select></label>
+<label>Título<input maxlength="80" name="title" placeholder="Opcional"/></label>
+<label>Dados<textarea name="data" placeholder="Cole do Excel ou Google Sheets, ou digite um rótulo e um valor por linha, separados por ponto e vírgula. Ex.: Jan; 10" rows="8"></textarea></label>
+</div><div class="chart-preview"><canvas height="600" id="chart-canvas" width="960"></canvas><p aria-live="polite" class="lobby-status" id="chart-status"></p></div></div>
+<div class="dialog-actions"><button class="button gold" type="submit">Inserir na lousa</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
 <div aria-live="polite" class="toast" hidden="" id="toast" role="status"></div>
 <div aria-hidden="true" hidden="" id="audio-sink"></div>
 <noscript><p class="noscript">Ative o JavaScript para usar o espaço do time.</p></noscript>
