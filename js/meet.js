@@ -1,7 +1,8 @@
 'use strict';
 // Sala dev: voz, chat (com imagens coladas) e compartilhamento de tela via WebRTC (PeerJS).
-// Malha P2P: quem entra conecta em todos que já estão na sala. O anfitrião confere a senha,
-// aprova a entrada e distribui a lista de participantes (roster), que é a única fonte de nomes.
+// Malha P2P: quem entra conecta em todos que já estão na sala. O anfitrião confere a senha
+// e distribui a lista de participantes (roster), que é a única fonte de nomes.
+// Quem tem o link e a senha entra direto.
 
 const HOST_PREFIX = 'decet-dev-';
 const ROOM_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
@@ -12,7 +13,16 @@ const MAX_RECEIVED_BYTES = 8 * 1024 * 1024;
 const MAX_IMAGE_SIDE = 2560;
 const COMPRESS_ABOVE = 1.5 * 1024 * 1024;
 const KNOCK_TIMEOUT = 15000;
-const APPROVAL_TIMEOUT = 120000;
+const SERVER_TIMEOUT = 15000;    // até conectar no servidor de sinalização
+const CONNECT_TIMEOUT = 20000;   // até abrir a conexão direta com o anfitrião
+const ANSWER_TIMEOUT = 15000;    // até o anfitrião responder à senha
+
+// Servidores para atravessar NAT. STUN resolve a maioria das redes domésticas.
+// Redes corporativas, VPN e alguns 4G exigem um TURN (retransmissão): crie uma conta gratuita
+// na Metered (Open Relay) e cole aqui a URL de credenciais, no formato
+// https://SEU-APP.metered.live/api/v1/turn/credentials?apiKey=SUA-CHAVE
+const STUN_SERVERS = [{urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302']}, {urls: 'stun:stun.cloudflare.com:3478'}];
+const TURN_CREDENTIALS_URL = '';
 const PENDING_TIMEOUT = 10000;
 const HISTORY_SIZE = 50;
 
@@ -20,7 +30,7 @@ const $ = selector => document.querySelector(selector);
 const lobby = $('#lobby'), lobbyForm = $('#lobby-form'), lobbyStatus = $('#lobby-status'), lobbySubmit = $('#lobby-submit');
 const room = $('#room'), stage = $('#stage'), screens = $('#screens'), tiles = $('#tiles');
 const messages = $('#messages'), composer = $('#composer'), input = $('#message-input'), fileInput = $('#file-input'), attachmentsBox = $('#attachments');
-const micBtn = $('#mic-btn'), shareBtn = $('#share-btn'), leaveBtn = $('#leave-btn'), requests = $('#requests');
+const micBtn = $('#mic-btn'), shareBtn = $('#share-btn'), leaveBtn = $('#leave-btn');
 const imageDialog = $('#image-dialog'), imageFull = $('#image-full'), imageDownload = $('#image-download');
 
 const state = {
@@ -31,7 +41,7 @@ const state = {
   waiting: [],           // conexões de peers que ainda não estão no roster
   history: [],           // últimas mensagens de texto (só o anfitrião guarda)
   localStream: null, screenStream: null, muted: false, micAvailable: true,
-  audioCtx: null, meters: new Map(), attachments: [], autoAdmit: false,
+  audioCtx: null, meters: new Map(), attachments: [],
 };
 
 // ---------- Lobby ----------
@@ -132,12 +142,25 @@ function meterLoop() {
 }
 
 // ---------- Peer ----------
-function makePeer(id) {
-  const peer = id ? new Peer(id, {debug: 0}) : new Peer({debug: 0});
+async function iceServers() {
+  if (!TURN_CREDENTIALS_URL) return STUN_SERVERS;
+  try {
+    const response = await fetch(TURN_CREDENTIALS_URL, {signal: AbortSignal.timeout(5000)});
+    const turn = await response.json();
+    if (Array.isArray(turn)) return [...STUN_SERVERS, ...turn];
+  } catch (error) { console.warn('[sala] TURN indisponível', error); }
+  return STUN_SERVERS;
+}
+async function makePeer(id) {
+  const options = {debug: 0, config: {iceServers: await iceServers()}};
+  const peer = id ? new Peer(id, options) : new Peer(options);
   state.peer = peer;
   peer.on('error', onPeerError);
   peer.on('connection', onConnection);
   peer.on('call', onCall);
+  // Sem resposta do servidor de sinalização: não deixa a tela presa.
+  const serverTimer = setTimeout(() => { if (state.peer === peer && !peer.open) lobbyFail('Sem resposta do servidor de sinalização. Verifique a internet e tente de novo.'); }, SERVER_TIMEOUT);
+  peer.on('open', () => clearTimeout(serverTimer));
   peer.on('disconnected', () => {
     // Perdeu o servidor de sinalização; as conexões P2P continuam. Reconecta para aceitar novas entradas.
     if (state.joined && !peer.destroyed) setTimeout(() => { if (!peer.destroyed && peer.disconnected) peer.reconnect(); }, 2000);
@@ -159,39 +182,42 @@ function onPeerError(err) {
   if (err.type !== 'peer-unavailable') console.warn('[sala]', err.type, err);
 }
 
-function createRoom(password) {
+async function createRoom(password) {
   state.isHost = true;
   state.password = password;
   state.room = newRoomCode();
   state.hostId = HOST_PREFIX + state.room;
   setLobbyStatus('Criando a sala…');
-  const peer = makePeer(state.hostId);
+  const peer = await makePeer(state.hostId);
   peer.on('open', id => {
     state.me.id = id;
     state.roster.set(id, state.me.name);
     enterRoom();
-    systemMessage('Sala criada. Envie o link e, por outro canal, a senha para o time.');
+    systemMessage('Sala criada. Envie o link e, por outro canal, a senha para o time. Quem tiver os dois entra direto.');
   });
 }
 
-function joinRoom(code, password) {
+async function joinRoom(code, password) {
   state.room = code;
   state.hostId = HOST_PREFIX + code;
-  setLobbyStatus('Procurando a sala…');
-  const peer = makePeer();
+  setLobbyStatus('Conectando ao servidor…');
+  const peer = await makePeer();
   peer.on('open', id => {
     state.me.id = id;
+    setLobbyStatus('Procurando a sala…');
     const conn = peer.connect(state.hostId, {reliable: true});
-    let settled = false;
+    let settled = false, timer;
     const settle = () => { settled = true; clearTimeout(timer); };
-    const timer = setTimeout(() => { if (!settled) { settle(); lobbyFail('O anfitrião não respondeu a tempo. Tente de novo.'); } }, APPROVAL_TIMEOUT);
+    const failAfter = (ms, message) => { clearTimeout(timer); timer = setTimeout(() => { if (!settled) { settle(); lobbyFail(message); } }, ms); };
+    failAfter(CONNECT_TIMEOUT, 'A sala existe, mas não foi possível conectar com ela. A rede de alguém (VPN, firewall ou rede corporativa) pode estar bloqueando a conexão direta. Tente outra rede, como o 4G do celular.');
     conn.on('open', () => {
       conn.send({type: 'knock', name: state.me.name, password});
-      setLobbyStatus('Aguardando o anfitrião aprovar sua entrada…');
+      setLobbyStatus('Conferindo a senha…');
+      failAfter(ANSWER_TIMEOUT, 'A sala não respondeu. Tente de novo.');
     });
     conn.on('data', msg => {
       if (settled || !msg || typeof msg !== 'object') return;
-      if (msg.type === 'denied') { settle(); lobbyFail(msg.reason === 'senha' ? 'Senha incorreta.' : 'O anfitrião recusou a entrada.'); }
+      if (msg.type === 'denied') { settle(); lobbyFail('Senha incorreta.'); }
       else if (msg.type === 'welcome') { settle(); onWelcome(conn, msg); }
     });
     conn.on('close', () => { if (!settled) { settle(); lobbyFail('A sala encerrou a conexão.'); } });
@@ -244,7 +270,7 @@ function releasePending() {
   });
 }
 
-// ---------- Anfitrião: senha e aprovação ----------
+// ---------- Anfitrião: confere a senha ----------
 function safeEqual(a, b) {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -259,33 +285,13 @@ function handleKnock(conn) {
     if (!msg || msg.type !== 'knock' || typeof msg.name !== 'string') return conn.close();
     const name = msg.name.trim().slice(0, 40) || 'Sem nome';
     if (!safeEqual(String(msg.password || ''), state.password)) return deny(conn, 'senha');
-    if (state.autoAdmit) admit(conn, name); else askHost(conn, name);
+    admit(conn, name);
   };
   conn.on('data', first);
 }
 function deny(conn, reason) {
   if (conn.open) conn.send({type: 'denied', reason});
   setTimeout(() => conn.close(), 500);
-}
-function askHost(conn, name) {
-  const card = document.createElement('div');
-  card.className = 'request';
-  const text = document.createElement('p');
-  const small = document.createElement('small');
-  small.textContent = 'PEDIDO PARA ENTRAR';
-  text.append(small, name + ' quer entrar na sala.');
-  const admitBtn = document.createElement('button');
-  admitBtn.type = 'button'; admitBtn.className = 'admit'; admitBtn.textContent = 'Admitir';
-  const denyBtn = document.createElement('button');
-  denyBtn.type = 'button'; denyBtn.textContent = 'Recusar';
-  card.append(text, admitBtn, denyBtn);
-  requests.append(card);
-  const done = () => { card.remove(); clearTimeout(expire); };
-  const expire = setTimeout(() => { done(); deny(conn, 'recusado'); }, APPROVAL_TIMEOUT - 5000);
-  admitBtn.addEventListener('click', () => { done(); if (conn.open) admit(conn, name); });
-  denyBtn.addEventListener('click', () => { done(); deny(conn, 'recusado'); });
-  conn.on('close', done);
-  admitBtn.focus();
 }
 function admit(conn, name) {
   state.roster.set(conn.peer, name);
@@ -444,7 +450,6 @@ function enterRoom() {
   room.hidden = false;
   $('#room-info').hidden = false;
   $('#room-code').textContent = state.room;
-  $('#auto-admit-wrap').hidden = !state.isHost;
   history.replaceState(null, '', '#sala=' + state.room);
   if (!state.micAvailable) systemMessage('Microfone indisponível: você entrou só ouvindo.');
   watchLevel(state.me.id, state.localStream);
@@ -501,7 +506,6 @@ $('#copy-link').addEventListener('click', async event => {
   catch { window.prompt('Copie o link da sala:', link); }
   setTimeout(() => { event.target.textContent = 'Copiar link'; }, 2000);
 });
-$('#auto-admit').addEventListener('change', event => { state.autoAdmit = event.target.checked; });
 function teardown() {
   // Sai da sala antes de fechar as conexões: os 'close' que vêm depois não devem
   // gerar avisos nem um roster novo (que derrubaria quem continua na sala).
