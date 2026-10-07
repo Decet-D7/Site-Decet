@@ -3,45 +3,90 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Sala dev — DECET</title>
+<title>Time DECET</title>
 <meta content="noindex,nofollow" name="robots"/><meta content="no-referrer" name="referrer"/>
 <meta content="#0a0a0a" name="theme-color"/>
 <script>/* Microfone e tela só funcionam em HTTPS: redireciona quem abrir por http. */if(location.protocol==="http:"&&!/^(localhost|127\.0\.0\.1)$/.test(location.hostname))location.replace("https:"+location.href.slice(5));</script>
 <link href="assets/mark.svg" rel="icon" type="image/svg+xml"/>
-<link href="css/styles.css" rel="stylesheet"/><link href="css/meet.css" rel="stylesheet"/>
-<script defer="" src="js/vendor/peerjs.min.js"></script><script defer="" src="js/meet.js"></script><script defer="" src="js/meet-board.js"></script><script defer="" src="js/meet-record.js"></script></head>
+<link href="css/styles.css" rel="stylesheet"/><link href="css/meet.css" rel="stylesheet"/><link href="css/team.css" rel="stylesheet"/>
+<script defer="" src="js/vendor/peerjs.min.js"></script><script defer="" src="js/vendor/supabase.js"></script>
+<script defer="" src="js/team.js"></script><script defer="" src="js/meet.js"></script><script defer="" src="js/meet-board.js"></script><script defer="" src="js/meet-record.js"></script>
+<script defer="" src="js/agenda.js"></script><script defer="" src="js/kanban.js"></script><script defer="" src="js/team-admin.js"></script></head>
 <body class="meet">
-<header class="meet-top">
+
+<section aria-labelledby="auth-title" class="auth" hidden="" id="auth">
+<div class="auth-copy">
 <a aria-label="DECET — Início" class="brand" href="index.html"><img alt="" height="30" src="assets/mark.svg" width="28"/><span>D<span class="brand-e">E</span>CET</span></a>
-<span class="meet-tag">SALA DEV</span>
+<p class="eyebrow">DECET / ESPAÇO DO TIME</p>
+<h1 id="auth-title">Reuniões, agenda<br/>e tarefas.<br/><em>Num lugar só.</em></h1>
+<ul class="lobby-points"><li>Chamadas com voz, tela, lousa, gravação e transcrição.</li><li>Agenda de reuniões visível para todo o time.</li><li>Kanban com responsáveis, prazos e etiquetas.</li></ul>
+</div>
+<div class="auth-card">
+<div aria-label="Acesso" class="mode-tabs" role="tablist">
+<button aria-selected="true" data-auth="login" role="tab" type="button">Entrar</button>
+<button aria-selected="false" data-auth="signup" role="tab" type="button">Primeiro acesso</button>
+<button aria-selected="false" data-auth="reset" role="tab" type="button">Esqueci a senha</button>
+</div>
+<form data-mode="login" id="auth-form" novalidate="">
+<label>E-mail<input autocomplete="username" name="email" placeholder="voce@decet.com.br" required="" type="email"/></label>
+<label class="auth-code">Código <span class="code-kind">de convite</span><input autocapitalize="characters" autocomplete="one-time-code" maxlength="12" name="code" placeholder="Recebido do administrador" spellcheck="false"/></label>
+<label>Senha<input autocomplete="current-password" minlength="8" name="password" required="" type="password"/></label>
+<label class="auth-confirm">Confirme a senha<input autocomplete="new-password" minlength="8" name="password2" type="password"/></label>
+<p class="lobby-hint auth-hint" id="auth-hint">Use o e-mail cadastrado pelo administrador do time.</p>
+<button class="button gold" id="auth-submit" type="submit">Entrar</button>
+<p aria-live="polite" class="lobby-status" id="auth-status" role="status"></p>
+</form>
+</div>
+</section>
+
+<div class="app" hidden="" id="app">
+<nav aria-label="Espaço do time" class="sidebar">
+<a aria-label="DECET — Início" class="brand" href="index.html"><img alt="" height="26" src="assets/mark.svg" width="24"/><span>D<span class="brand-e">E</span>CET</span></a>
+<p class="sidebar-label">TIME</p>
+<div class="nav-list">
+<a class="nav-item" data-view="meet" href="#meet"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 6h11v12H4zM15 10l5-3v10l-5-3"></path></svg><span>Reunião</span><i aria-hidden="true" class="nav-badge"></i></a>
+<a class="nav-item" data-view="agenda" href="#agenda"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 5h16v15H4zM4 9h16M8 3v4M16 3v4M8 13h3M8 16h6"></path></svg><span>Agenda</span><i aria-hidden="true" class="nav-badge"></i></a>
+<a class="nav-item" data-view="kanban" href="#kanban"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v13h-4z"></path></svg><span>Kanban</span><i aria-hidden="true" class="nav-badge"></i></a>
+<a class="nav-item" data-view="team" href="#team" hidden=""><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14a6 6 0 0 1 3.5 6"></path></svg><span>Equipe</span><i aria-hidden="true" class="nav-badge"></i></a>
+</div>
+<a class="call-pill" data-view="meet" hidden="" href="#meet" id="call-pill"><i aria-hidden="true"></i>Em chamada · voltar</a>
+<div class="me">
+<span aria-hidden="true" class="avatar" id="me-avatar"></span>
+<div><b id="me-name"></b><small id="me-role"></small></div>
+<button class="chip" id="logout" type="button">Sair</button>
+</div>
+</nav>
+
+<main class="workspace" id="conteudo">
+<div aria-live="polite" class="upcoming-banner" hidden="" id="upcoming-banner"></div>
+
+<section aria-label="Reunião" class="view view-meet" data-view-panel="meet">
+<header class="meet-top">
+<h1 class="view-title">Reunião</h1>
 <div class="room-info" hidden="" id="room-info">
 <span class="room-code"><small>Sala</small> <b id="room-code"></b></span>
 <button class="chip" id="copy-link" type="button">Copiar link</button>
 <span class="room-count" id="room-count"></span>
 </div>
 </header>
-
-<main id="conteudo">
 <section aria-labelledby="lobby-title" class="lobby" id="lobby">
 <div class="lobby-copy">
-<p class="eyebrow">DECET / USO INTERNO</p>
-<h1 id="lobby-title">Voz, chat e tela.<br/><em>Só para o time.</em></h1>
-<p>Áudio, tela e mensagens vão direto entre os participantes (WebRTC, criptografado). Nada fica em servidor: ao sair, o histórico some. Gravações ficam no computador do anfitrião.</p>
-<ul class="lobby-points"><li>Quem cria a sala define a senha. Quem tiver o link e a senha entra direto.</li><li>Cole imagens no chat com <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li><li>Compartilhamento de tela, lousa, gravação e transcrição no navegador do computador.</li></ul>
+<p class="eyebrow">DECET / SALA DO TIME</p>
+<h2 id="lobby-title">Voz, chat e tela.<br/><em>Só para o time.</em></h2>
+<p>Áudio, tela e mensagens vão direto entre os participantes (WebRTC, criptografado). Só entra quem está logado e cadastrado no time.</p>
+<h3 class="lobby-sub">Próximas reuniões</h3>
+<ul class="lobby-upcoming" id="lobby-upcoming"><li class="empty">Nenhuma reunião marcada.</li></ul>
 </div>
-<form class="lobby-card" data-mode="create" id="lobby-form" novalidate="">
-<div aria-label="O que você quer fazer?" class="mode-tabs" role="tablist">
-<button aria-selected="true" data-mode="create" role="tab" type="button">Criar sala</button>
-<button aria-selected="false" data-mode="join" role="tab" type="button">Entrar numa sala</button>
-</div>
-<label>Seu nome<input autocomplete="nickname" maxlength="40" name="name" placeholder="Como o time te chama" required=""/></label>
-<label class="join-only">Código ou link da sala<input autocapitalize="off" autocomplete="off" name="room" placeholder="xxxx-xxxx-xxxx" spellcheck="false"/></label>
-<label>Senha da sala<input autocomplete="off" minlength="6" name="password" placeholder="Mínimo de 6 caracteres" required="" type="password"/></label>
-<p class="lobby-hint create-only">Você será o anfitrião. A senha não fica salva em lugar nenhum: passe para o time por outro canal. Quem tiver o link e a senha entra direto. Se o anfitrião sair, quem está na sala continua, mas ninguém novo entra.</p>
-<p class="lobby-hint join-only">Cole o link ou o código recebido e digite a senha da sala.</p>
-<button class="button gold" id="lobby-submit" type="submit">Criar sala</button>
-<p aria-live="polite" class="lobby-status" id="lobby-status" role="status"></p>
+<div class="lobby-card">
+<h3>Começar agora</h3>
+<p class="lobby-hint">Cria uma sala nova e você vira o anfitrião. Depois é só copiar o link para o time.</p>
+<button class="button gold" id="create-room" type="button">Criar sala</button>
+<form class="join-form" id="join-form" novalidate="">
+<label>Entrar com código ou link<input autocapitalize="off" autocomplete="off" name="room" placeholder="xxxx-xxxx-xxxx" spellcheck="false"/></label>
+<button class="chip" id="join-submit" type="submit">Entrar na sala</button>
 </form>
+<p aria-live="polite" class="lobby-status" id="lobby-status" role="status"></p>
+</div>
 </section>
 
 <section aria-label="Sala" class="room" hidden="" id="room">
@@ -87,7 +132,27 @@
 </div>
 </aside>
 </section>
+</section>
+
+<section aria-labelledby="agenda-title" class="view view-agenda" data-view-panel="agenda" hidden="">
+<header class="view-head"><div><p class="eyebrow">AGENDA DO TIME</p><h1 id="agenda-title">Reuniões</h1></div><button class="button gold" id="meeting-new" type="button">Nova reunião</button></header>
+<div class="agenda-list" id="agenda-list"><p class="empty">Carregando…</p></div>
+<details class="agenda-past"><summary>Reuniões anteriores</summary><div class="agenda-list" id="agenda-past"></div></details>
+</section>
+
+<section aria-labelledby="kanban-title" class="view view-kanban" data-view-panel="kanban" hidden="">
+<header class="view-head"><div><p class="eyebrow">KANBAN DO TIME</p><h1 id="kanban-title">Tarefas</h1></div>
+<div class="kanban-filters"><input aria-label="Buscar cartões" id="kanban-search" placeholder="Buscar cartões" type="search"/><label class="check"><input id="kanban-mine" type="checkbox"/> Só os meus</label></div></header>
+<div class="board-columns" id="kanban-board"><p class="empty">Carregando…</p></div>
+</section>
+
+<section aria-labelledby="team-title" class="view view-team" data-view-panel="team" hidden="">
+<header class="view-head"><div><p class="eyebrow">CONTROLE DE LOGINS</p><h1 id="team-title">Equipe</h1></div><button class="button gold" id="member-new" type="button">Cadastrar pessoa</button></header>
+<div class="table-wrap"><table class="team-table"><thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Papel</th><th scope="col">Situação</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead><tbody id="team-rows"></tbody></table></div>
+<p class="view-note">Quem é cadastrado aqui recebe um código de convite para criar a senha em "Primeiro acesso". Desativar bloqueia na hora o acesso à agenda, ao kanban e às salas.</p>
+</section>
 </main>
+</div>
 
 <dialog aria-label="Imagem ampliada" id="image-dialog"><img alt="" id="image-full"/><div class="image-actions"><a class="chip" download="" id="image-download">Baixar</a><button class="chip" id="image-close" type="button">Fechar</button></div></dialog>
 <dialog aria-labelledby="rec-title" id="rec-dialog"><div class="dialog-top"><span class="eyebrow">GRAVAÇÃO LOCAL</span><button aria-label="Fechar" class="dialog-close" id="rec-cancel-x" type="button">×</button></div>
@@ -97,6 +162,45 @@
 <li><b>2.</b> Clique em começar e escolha <strong>esta aba</strong> no aviso do navegador. Assim a gravação mostra a sala inteira: telas, lousa e legendas.</li></ol>
 <div class="rec-actions"><button class="button gold" id="rec-start" type="button">Começar a gravar</button><button class="chip" id="rec-cancel" type="button">Cancelar</button></div>
 </dialog>
+<dialog aria-labelledby="meeting-dialog-title" class="form-dialog" id="meeting-dialog"><form id="meeting-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">AGENDA</span><button aria-label="Fechar" class="dialog-x" type="button" value="cancel">×</button></div>
+<h2 id="meeting-dialog-title">Nova reunião</h2>
+<label>Título<input maxlength="120" name="title" required=""/></label>
+<div class="form-row"><label>Data<input name="date" required="" type="date"/></label><label>Início<input name="time" required="" type="time"/></label>
+<label>Duração<select name="duration"><option value="15">15 min</option><option selected="" value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1 h 30</option><option value="120">2 h</option><option value="180">3 h</option></select></label></div>
+<label>Pauta<textarea maxlength="2000" name="description" rows="4"></textarea></label>
+<p aria-live="polite" class="lobby-status" id="meeting-status" role="status"></p>
+<div class="dialog-actions"><button class="button gold" type="submit">Salvar</button><button class="chip danger" hidden="" id="meeting-delete" type="button">Excluir</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="card-dialog-title" class="form-dialog wide" id="card-dialog"><form id="card-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">CARTÃO</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<label class="card-title-field"><span class="sr-only">Título</span><input id="card-dialog-title" maxlength="200" name="title" required=""/></label>
+<div class="form-row"><label>Coluna<select name="column_id"></select></label><label>Responsável<select name="assignee"></select></label><label>Prazo<input name="due_date" type="date"/></label></div>
+<fieldset class="label-picker"><legend>Etiquetas</legend><div id="card-labels"></div></fieldset>
+<label>Descrição<textarea maxlength="5000" name="description" rows="6"></textarea></label>
+<p class="card-meta" id="card-meta"></p>
+<p aria-live="polite" class="lobby-status" id="card-status" role="status"></p>
+<div class="dialog-actions"><button class="button gold" type="submit">Salvar</button><button class="chip danger" id="card-delete" type="button">Excluir cartão</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="member-dialog-title" class="form-dialog" id="member-dialog"><form id="member-form" method="dialog" novalidate="">
+<div class="dialog-top"><span class="eyebrow">EQUIPE</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="member-dialog-title">Cadastrar pessoa</h2>
+<label>Nome<input maxlength="80" name="name" required=""/></label>
+<label>E-mail<input name="email" required="" type="email"/></label>
+<label>Papel<select name="role"><option value="member">Membro</option><option value="admin">Administrador</option></select></label>
+<p aria-live="polite" class="lobby-status" id="member-status" role="status"></p>
+<div class="dialog-actions"><button class="button gold" type="submit">Salvar</button><button class="chip dialog-x" type="button">Cancelar</button></div>
+</form></dialog>
+<dialog aria-labelledby="code-dialog-title" class="form-dialog" id="code-dialog">
+<div class="dialog-top"><span class="eyebrow" id="code-dialog-kind">CÓDIGO DE CONVITE</span><button aria-label="Fechar" class="dialog-x" type="button">×</button></div>
+<h2 id="code-dialog-title">Envie para a pessoa</h2>
+<p class="code-big" id="code-value"></p>
+<p id="code-help"></p>
+<textarea aria-label="Mensagem pronta para enviar" id="code-message" readonly="" rows="5"></textarea>
+<div class="dialog-actions"><button class="button gold" id="code-copy" type="button">Copiar mensagem</button><button class="chip dialog-x" type="button">Fechar</button></div>
+<p class="view-note">O código aparece só agora. Se perder, gere outro: o anterior deixa de valer.</p>
+</dialog>
+<div aria-live="polite" class="toast" hidden="" id="toast" role="status"></div>
 <div aria-hidden="true" hidden="" id="audio-sink"></div>
-<noscript><p class="noscript">Ative o JavaScript para usar a sala.</p></noscript>
+<noscript><p class="noscript">Ative o JavaScript para usar o espaço do time.</p></noscript>
 </body></html>

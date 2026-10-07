@@ -1,0 +1,118 @@
+/* Espaço do time (meet.html): login, barra lateral estilo Slack, agenda, kanban e equipe. */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.empty{color:var(--muted);font-size:14px;padding:18px 0}
+.chip.danger,.kmenu-list .danger{color:#f0c9bb;border-color:#8e5643}.chip.danger:hover{border-color:#e0533d}
+.chip:disabled,.button:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- Login ---------- */
+.auth{min-height:100svh;display:grid;grid-template-columns:1.1fr 1fr;gap:8%;align-items:center;padding:60px 6%}.auth[hidden]{display:none}
+.auth-copy .brand{margin-bottom:60px}.auth-copy .brand>span{font-size:24px}.auth-copy .eyebrow{color:var(--gold);margin-bottom:26px}
+.auth h1{font-size:clamp(42px,4.8vw,76px);line-height:1.04;letter-spacing:-.055em}.auth h1 em{color:var(--gold)}
+.auth-card{border:1px solid var(--line);background:#11120f;padding:34px}.auth-card label{display:block;font-size:12px;color:var(--stone);margin-bottom:20px}
+.auth-card .mode-tabs{gap:22px}.auth-card .button{width:100%;justify-content:center}
+#auth-form[data-mode="login"] .auth-code,#auth-form[data-mode="login"] .auth-confirm{display:none}
+.auth-code input{font-family:Consolas,monospace;letter-spacing:.2em;text-transform:uppercase}
+
+/* ---------- App: barra lateral + área de trabalho ---------- */
+.app{height:100svh;display:grid;grid-template-columns:232px minmax(0,1fr)}.app[hidden]{display:none}
+.sidebar{background:#0d0e0b;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 14px;gap:6px;min-height:0}
+.sidebar .brand{padding:4px 8px 18px}.sidebar .brand>span{font-size:20px}
+.sidebar-label{font-size:11px;letter-spacing:.18em;color:var(--muted);padding:10px 10px 6px}
+.nav-list{display:flex;flex-direction:column;gap:2px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px;color:var(--stone);font-size:14px;border-left:2px solid transparent;position:relative}.nav-item[hidden]{display:none}
+.nav-item svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav-item:hover{background:#17180f;color:var(--ivory)}.nav-item.active{background:#1d1c14;color:var(--ivory);border-left-color:var(--gold)}
+.nav-badge{display:none;margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--gold)}.nav-item.has-badge .nav-badge{display:block}
+.call-pill{margin:14px 4px 0;padding:10px 12px;border:1px solid #2e7d4f;color:#bfe3cc;background:#122019;font-size:13px;display:flex;align-items:center;gap:10px}.call-pill[hidden]{display:none}
+.call-pill i{width:8px;height:8px;border-radius:50%;background:#3fbf6f;animation:rec-blink 1.6s infinite}
+.me{margin-top:auto;border-top:1px solid var(--line);padding:14px 6px 2px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.me .avatar{width:34px;height:34px;font-size:13px;font-family:Arial,sans-serif}.me b{display:block;font-weight:400;font-size:13px;color:var(--ivory);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.me small{font-size:11px;color:var(--muted)}.me .chip{padding:6px 10px}
+.workspace{display:flex;flex-direction:column;min-height:0;min-width:0;position:relative}
+.view{flex:1;min-height:0;overflow-y:auto;padding:28px 32px 40px}.view[hidden]{display:none}
+.view-meet{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.view-meet .meet-top{padding:0 24px}.view-title{font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:400}
+.view-head{display:flex;align-items:end;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}
+.view-head .eyebrow{color:var(--gold);margin-bottom:10px}.view-head h1{font-size:clamp(32px,3vw,46px);letter-spacing:-.045em}
+.view-note{font-size:12px;color:var(--muted);margin-top:18px;max-width:720px}
+.upcoming-banner{display:flex;align-items:center;gap:12px;padding:10px 24px;background:#1d1c14;border-bottom:1px solid #665e4b;font-size:14px;color:var(--ivory)}.upcoming-banner[hidden]{display:none}
+.upcoming-banner .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:rec-blink 1.6s infinite}.upcoming-banner .chip{margin-left:auto}
+.toast{position:fixed;right:20px;bottom:20px;z-index:60;max-width:min(420px,calc(100% - 40px));background:var(--ivory);color:var(--carbon);border:1px solid var(--gold);padding:14px 18px;font-size:14px;box-shadow:0 18px 40px rgba(0,0,0,.45)}.toast[hidden]{display:none}.toast.error{background:#3a2620;color:#f0c9bb;border-color:#8e5643}
+
+/* ---------- Lobby da reunião ---------- */
+.lobby h2{font-size:clamp(38px,4.2vw,66px);line-height:1.04;letter-spacing:-.055em}.lobby h2 em{color:var(--gold)}
+.lobby-sub{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:400;margin:34px 0 8px}
+.lobby-upcoming{list-style:none;margin:0;padding:0;max-width:560px}.lobby-upcoming li{display:grid;grid-template-columns:130px 1fr auto;gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.lobby-upcoming .when{color:var(--gold);font-size:12px}.lobby-upcoming .what{color:var(--ivory);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lobby-upcoming .button{padding:8px 14px;min-height:0;gap:0}
+.lobby-card h3{font-size:24px;letter-spacing:-.03em;margin-bottom:12px}.join-form{margin-top:30px;border-top:1px solid var(--line);padding-top:24px}.join-form .chip{width:100%;justify-content:center;padding:12px}
+
+/* ---------- Agenda ---------- */
+.agenda-day{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:400;margin:26px 0 8px}.agenda-day:first-child{margin-top:0}
+.meeting{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:20px;align-items:start;padding:16px 18px;border:1px solid var(--line);background:#11120f;margin-bottom:10px}
+.meeting.live{border-color:var(--gold);background:#1a1912}
+.meeting-time b{display:block;font-family:Georgia,serif;font-size:24px;font-weight:400;color:var(--ivory)}.meeting-time small{display:block;font-size:12px;color:var(--muted)}
+.meeting-body h3{font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:12px;flex-wrap:wrap}.meeting-desc{font-size:14px;color:var(--stone);margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:4.8em;overflow:hidden}
+.meeting-body small{display:block;font-size:12px;color:var(--muted);margin-top:8px}
+.live-badge{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--carbon);background:var(--gold);padding:3px 8px}
+.meeting-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;max-width:330px}.meeting-actions .button{padding:8px 16px;min-height:0;gap:0}
+.agenda-past{margin-top:30px;border-top:1px solid var(--line);padding-top:16px}.agenda-past summary{cursor:pointer;color:var(--muted);font-size:13px;letter-spacing:.1em;text-transform:uppercase}.agenda-past .agenda-list{margin-top:16px;opacity:.75}
+
+/* ---------- Kanban ---------- */
+.view-kanban{display:flex;flex-direction:column}.view-kanban .view-head{margin-bottom:18px}
+.kanban-filters{display:flex;align-items:center;gap:18px}.kanban-filters input[type=search]{width:240px;min-height:40px;padding:8px 0}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--stone);cursor:pointer}.meet .check input{width:16px;height:16px;min-height:0;padding:0;accent-color:var(--gold)}
+.board-columns{flex:1;min-height:0;display:flex;gap:14px;overflow-x:auto;align-items:flex-start;padding-bottom:12px}
+.kcol{flex:0 0 280px;max-height:100%;display:flex;flex-direction:column;background:#11120f;border:1px solid var(--line)}
+.kcol-head{display:flex;align-items:center;gap:10px;padding:12px 12px 8px}.kcol-head h2{font-size:14px;font-weight:400;letter-spacing:.04em;color:var(--ivory);flex:1;cursor:text}
+.kcount{font-size:12px;color:var(--muted)}
+.kmenu{position:relative}.kmenu summary{list-style:none;cursor:pointer;padding:0 6px;color:var(--muted);font-size:18px;line-height:1}.kmenu summary::-webkit-details-marker{display:none}
+.kmenu-list{position:absolute;right:0;top:24px;z-index:5;background:#0d0e0b;border:1px solid #4d4839;display:flex;flex-direction:column;min-width:210px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.kmenu-list button{background:none;border:0;color:var(--stone);text-align:left;padding:10px 14px;font-size:13px}.kmenu-list button:hover{background:#1d1c14;color:var(--ivory)}
+.kcards{list-style:none;margin:0;padding:4px 10px 6px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:24px}
+.kcards.drop-target{background:#17180f}.kcards.drop-end:after{content:'';height:3px;background:var(--gold)}
+.kcard{background:#1b1c17;border:1px solid #2f2d24;padding:10px 12px;cursor:grab;transition:border-color .15s}.kcard:hover,.kcard:focus-visible{border-color:#665e4b;outline:0}
+.kcard.dragging{opacity:.4}.kcard.drop-before{box-shadow:0 -3px 0 var(--gold)}
+.kcard-labels{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}.klabel{font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;background:var(--label);color:#fff}
+.kcard-title{font-size:14px;color:var(--ivory);line-height:1.4;overflow-wrap:anywhere}
+.kcard-meta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--muted)}.kcard-meta:empty{display:none}
+.kdue{padding:1px 6px;border:1px solid #3a382e}.kdue.overdue{color:#f0c9bb;border-color:#8e5643;background:#2a1a16}.kdue.today{color:var(--carbon);background:var(--gold);border-color:var(--gold)}
+.avatar.mini{width:24px;height:24px;font-size:10px;margin-left:auto;font-family:Arial,sans-serif;flex:none}
+.kadd-open{background:none;border:0;color:var(--muted);text-align:left;padding:10px 12px 12px;font-size:13px}.kadd-open:hover{color:var(--ivory)}
+.kadd{padding:6px 10px 12px}.kadd[hidden]{display:none}.kadd textarea{min-height:60px;font-size:14px;background:#1b1c17;padding:8px 10px;border:1px solid #4d4839}.kadd div{display:flex;gap:8px;margin-top:8px}.kadd .button{padding:8px 14px;min-height:0;gap:0}
+.knew{background:transparent;border-style:dashed;padding:6px 12px}.knew input{min-height:40px;font-size:14px;border-bottom:0}
+
+/* ---------- Equipe ---------- */
+.table-wrap{overflow-x:auto;border:1px solid var(--line)}
+.team-table{width:100%;border-collapse:collapse;font-size:14px}.team-table th{text-align:left;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:400;padding:12px 14px;border-bottom:1px solid var(--line)}
+.team-table td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}.team-table tr:last-child td{border-bottom:0}.team-table tr.inactive td{opacity:.55}
+.who{display:flex;align-items:center;gap:10px;white-space:nowrap}.who .avatar.mini{margin-left:0}.who b{font-weight:400;color:var(--ivory)}.who small{color:var(--muted);font-size:12px}
+.mono{font-family:Consolas,monospace;font-size:13px;color:var(--stone)}
+.status{font-size:12px;padding:3px 9px;border:1px solid var(--line);white-space:nowrap}.status.on{color:#bfe3cc;border-color:#2e7d4f}.status.wait{color:var(--gold);border-color:#665e4b}.status.off{color:#f0c9bb;border-color:#8e5643}
+.row-actions{display:flex;flex-wrap:nowrap;gap:6px;justify-content:flex-end}.row-actions .chip{padding:6px 10px}
+
+/* ---------- Diálogos de formulário ---------- */
+.form-dialog{background:#0d0e0b;color:var(--ivory);border-color:#665e4b;max-width:560px}.form-dialog.wide{max-width:760px}
+.form-dialog h2{font-size:30px;margin:6px 0 20px}.form-dialog .dialog-top button{color:var(--ivory)}.form-dialog .dialog-x{background:none}
+.form-dialog label{display:block;font-size:12px;color:var(--stone);margin-bottom:18px}
+.form-dialog select{display:block;width:100%;background:#0d0e0b;color:var(--ivory);border:0;border-bottom:1px solid #6c675b;min-height:46px;font-size:15px;color-scheme:dark}
+.form-dialog .form-row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.dialog-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}.dialog-actions .button{padding:12px 22px}
+.card-title-field input{font-size:22px;letter-spacing:-.02em}
+.label-picker{border:0;padding:0;margin:0 0 18px}.label-picker legend{font-size:12px;color:var(--stone);margin-bottom:10px}
+.label-picker div{display:flex;flex-wrap:wrap;gap:8px}.label-option{display:flex!important;align-items:center;gap:8px;margin:0!important;padding:6px 10px;border:1px solid #4d4839;cursor:pointer}
+.label-option:before{content:'';width:12px;height:12px;background:var(--label)}.meet .label-option input{width:15px;height:15px;min-height:0;padding:0;margin:0;accent-color:var(--gold)}
+.card-meta{font-size:12px;color:var(--muted)}
+.code-big{font-family:Consolas,monospace;font-size:40px;letter-spacing:.24em;color:var(--gold);text-align:center;border:1px dashed #665e4b;padding:18px;margin:6px 0 14px}
+#code-message{font-size:13px;min-height:120px;background:#11120f;border:1px solid var(--line);padding:10px 12px;margin:14px 0}
+
+@media(max-width:1100px){.meeting{grid-template-columns:80px minmax(0,1fr)}.meeting-actions{grid-column:2;justify-content:flex-start;max-width:none}}
+@media(max-width:900px){
+  .auth{grid-template-columns:1fr;gap:36px;padding:32px 16px}.auth-copy .brand{margin-bottom:28px}.auth-card{padding:24px 18px}
+  .app{height:auto;min-height:100svh;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr}
+  .sidebar{flex-direction:row;align-items:center;flex-wrap:wrap;padding:10px 12px;gap:4px;border-right:0;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+  .sidebar .brand{padding:0 8px 0 0}.sidebar-label{display:none}.nav-list{flex-direction:row;order:3;width:100%;overflow-x:auto}
+  .nav-item{border-left:0;border-bottom:2px solid transparent;padding:8px 10px}.nav-item.active{border-bottom-color:var(--gold)}
+  .call-pill{order:4;margin:6px 0 0;width:100%}.me{margin:0 0 0 auto;border:0;padding:0;grid-template-columns:auto auto}.me>div{display:none}
+  .view{padding:20px 16px 32px}.view-meet{overflow:visible}.view-meet .meet-top{padding:0 16px}
+  .form-dialog .form-row{grid-template-columns:1fr;gap:0}.lobby-upcoming li{grid-template-columns:1fr auto}.lobby-upcoming .when{grid-column:1/3}
+  .kcol{flex-basis:84vw}.kanban-filters{width:100%}.kanban-filters input[type=search]{flex:1;width:auto}
+}
