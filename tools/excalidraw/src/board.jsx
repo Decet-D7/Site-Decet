@@ -46,3 +46,7 @@ export function mountBoard(container, options) {
 }
 
 export {CaptureUpdateAction, reconcileElements, restoreElements, convertToExcalidrawElements, newElementWith, exportToBlob};
+
+// Carregados só quando usados (pedaços separados): calculadora das caixas de texto e gráficos extras.
+export const loadMath = () => import('./math.js');
+export const loadChart = () => import('chart.js/auto').then(module => module.default);
