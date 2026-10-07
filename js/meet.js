@@ -38,6 +38,7 @@ const hooks = {
   entered: [],     // () entrou na sala
   audio: [],       // (id, stream) chegou o áudio de um participante
   left: [],        // (id) participante saiu
+  connected: [],   // (id) abriu o canal de dados com um participante
   muted: [],       // (muted) mudou o próprio microfone
   leave: [],       // async () antes de sair da sala
 };
@@ -372,6 +373,7 @@ function attachMember(conn) {
   const ready = () => {
     conn.send({type: 'state', muted: state.muted});
     if (state.screenStream) callScreen(id);
+    hooks.connected.forEach(fn => fn(id));
   };
   if (conn.open) ready(); else conn.on('open', ready);
 }
@@ -726,6 +728,8 @@ async function addAttachments(files) {
 const imageFiles = list => [...list].filter(file => file.type.startsWith('image/'));
 document.addEventListener('paste', event => {
   if (!state.joined || !event.clipboardData) return;
+  // Com a lousa aberta, o que é colado fora do chat vai para a lousa (o Excalidraw cuida disso).
+  if (!$('#board').hidden && !event.target.closest?.('#chat')) return;
   const files = [...event.clipboardData.items].filter(item => item.kind === 'file' && item.type.startsWith('image/')).map(item => item.getAsFile()).filter(Boolean);
   if (!files.length) return;
   if (!event.clipboardData.types.includes('text/plain')) event.preventDefault();

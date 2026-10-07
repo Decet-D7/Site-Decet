@@ -1,0 +1,17 @@
+{
+  "name": "decet-lousa",
+  "private": true,
+  "description": "Gera js/vendor/excalidraw (lousa da sala dev) a partir do Excalidraw + React. Rode: npm install && npm run build",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@excalidraw/excalidraw": "0.18.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  }
+}
