@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Sala dev — DECET</title>
+<meta content="noindex,nofollow" name="robots"/><meta content="no-referrer" name="referrer"/>
+<meta content="#0a0a0a" name="theme-color"/>
+<link href="assets/mark.svg" rel="icon" type="image/svg+xml"/>
+<link href="css/styles.css" rel="stylesheet"/><link href="css/meet.css" rel="stylesheet"/>
+<script defer="" src="js/vendor/peerjs.min.js"></script><script defer="" src="js/meet.js"></script></head>
+<body class="meet">
+<header class="meet-top">
+<a aria-label="DECET — Início" class="brand" href="index.html"><img alt="" height="30" src="assets/mark.svg" width="28"/><span>D<span class="brand-e">E</span>CET</span></a>
+<span class="meet-tag">SALA DEV</span>
+<div class="room-info" hidden="" id="room-info">
+<span class="room-code"><small>Sala</small> <b id="room-code"></b></span>
+<button class="chip" id="copy-link" type="button">Copiar link</button>
+<label class="auto-admit" hidden="" id="auto-admit-wrap"><input id="auto-admit" type="checkbox"/> Admitir quem acertar a senha</label>
+<span class="room-count" id="room-count"></span>
+</div>
+</header>
+
+<main id="conteudo">
+<section aria-labelledby="lobby-title" class="lobby" id="lobby">
+<div class="lobby-copy">
+<p class="eyebrow">DECET / USO INTERNO</p>
+<h1 id="lobby-title">Voz, chat e tela.<br/><em>Só para o time.</em></h1>
+<p>Áudio, tela e mensagens vão direto entre os participantes (WebRTC, criptografado). Nada fica gravado: ao sair, o histórico some.</p>
+<ul class="lobby-points"><li>Quem cria a sala define a senha e aprova cada entrada.</li><li>Cole imagens no chat com <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li><li>Compartilhamento de tela no navegador do computador.</li></ul>
+</div>
+<form class="lobby-card" data-mode="create" id="lobby-form" novalidate="">
+<div aria-label="O que você quer fazer?" class="mode-tabs" role="tablist">
+<button aria-selected="true" data-mode="create" role="tab" type="button">Criar sala</button>
+<button aria-selected="false" data-mode="join" role="tab" type="button">Entrar numa sala</button>
+</div>
+<label>Seu nome<input autocomplete="nickname" maxlength="40" name="name" placeholder="Como o time te chama" required=""/></label>
+<label class="join-only">Código ou link da sala<input autocapitalize="off" autocomplete="off" name="room" placeholder="xxxx-xxxx-xxxx" spellcheck="false"/></label>
+<label>Senha da sala<input autocomplete="off" minlength="6" name="password" placeholder="Mínimo de 6 caracteres" required="" type="password"/></label>
+<p class="lobby-hint create-only">Você será o anfitrião. A senha não fica salva em lugar nenhum: passe para o time por outro canal. Se o anfitrião sair, quem está na sala continua, mas ninguém novo entra.</p>
+<p class="lobby-hint join-only">Depois da senha, o anfitrião ainda precisa aprovar sua entrada.</p>
+<button class="button gold" id="lobby-submit" type="submit">Criar sala</button>
+<p aria-live="polite" class="lobby-status" id="lobby-status" role="status"></p>
+</form>
+</section>
+
+<section aria-label="Sala" class="room" hidden="" id="room">
+<div class="stage" id="stage">
+<div aria-label="Telas compartilhadas" class="screens" id="screens"></div>
+<ul aria-label="Participantes" class="tiles" id="tiles"></ul>
+</div>
+<div aria-label="Controles da chamada" class="controls" role="toolbar">
+<button aria-pressed="false" class="control" id="mic-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0M12 17v4M8 21h8"></path><path class="slash" d="M4 4l16 16"></path></svg><span>Microfone</span></button>
+<button aria-pressed="false" class="control" id="share-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M3 5h18v11H3zM8 20h8M12 16v4M12 13V8m-3 3 3-3 3 3"></path></svg><span>Compartilhar tela</span></button>
+<button class="control leave" id="leave-btn" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"></path></svg><span>Sair</span></button>
+</div>
+<aside aria-labelledby="chat-title" class="chat" id="chat">
+<h2 id="chat-title">Chat</h2>
+<ol aria-live="polite" class="messages" id="messages" role="log"></ol>
+<form class="composer" id="composer">
+<div aria-label="Imagens para enviar" class="attachments" id="attachments"></div>
+<textarea aria-label="Mensagem" id="message-input" maxlength="4000" placeholder="Mensagem — cole imagens com Ctrl+V" rows="2"></textarea>
+<div class="composer-actions"><label class="chip attach">Imagem<input accept="image/png,image/jpeg,image/webp,image/gif" id="file-input" multiple="" type="file"/></label><span class="composer-hint">Enter envia · Shift+Enter quebra linha</span><button class="button gold send" type="submit">Enviar</button></div>
+</form>
+</aside>
+<div aria-live="assertive" class="requests" id="requests"></div>
+</section>
+</main>
+
+<dialog aria-label="Imagem ampliada" id="image-dialog"><img alt="" id="image-full"/><div class="image-actions"><a class="chip" download="" id="image-download">Baixar</a><button class="chip" id="image-close" type="button">Fechar</button></div></dialog>
+<div aria-hidden="true" hidden="" id="audio-sink"></div>
+<noscript><p class="noscript">Ative o JavaScript para usar a sala.</p></noscript>
+</body></html>
