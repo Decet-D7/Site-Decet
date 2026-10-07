@@ -94,15 +94,8 @@
 <div aria-live="polite" class="room-flags" id="room-flags"></div>
 <div aria-label="Telas compartilhadas" class="screens" id="screens"></div>
 <section aria-label="Lousa" class="board" hidden="" id="board">
-<div aria-label="Ferramentas da lousa" class="board-tools" role="toolbar">
-<div aria-label="Cor" class="board-colors" id="board-colors"></div>
-<div aria-label="Espessura" class="board-widths" id="board-widths"></div>
-<button aria-pressed="false" class="chip" id="board-eraser" type="button">Borracha</button>
-<button class="chip" id="board-undo" type="button">Desfazer</button>
-<button class="chip" id="board-clear" type="button">Limpar</button>
-<button class="chip" id="board-download" type="button">Baixar PNG</button>
-</div>
-<div class="board-surface"><canvas aria-label="Área de desenho compartilhada" id="board-canvas"></canvas></div>
+<p aria-live="polite" class="board-status" hidden="" id="board-status">Carregando a lousa…</p>
+<div class="board-host" id="board-host"></div>
 </section>
 <ul aria-label="Participantes" class="tiles" id="tiles"></ul>
 <div aria-live="polite" class="captions" id="captions"></div>
